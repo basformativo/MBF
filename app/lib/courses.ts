@@ -1,129 +1,175 @@
 
-export const COURSES = [
-    {
-        id: 1,
-        title: "Básquet Formativo: Iniciación",
-        category: "Formativo",
-        level: "Principiante",
-        price: "$49.99",
-        image: "https://firebasestorage.googleapis.com/v0/b/basquet-formativo.appspot.com/o/images%2FCancha-Blanca-50.png?alt=media&token=fb103b37-5df5-46f2-8521-39259a133baf",
-        description: "Aprende los fundamentos esenciales para entrenar a niños y jóvenes en sus primeros pasos en el baloncesto. Este curso cubre desde la planificación de sesiones divertidas hasta la enseñanza de reglas básicas.",
-        features: [
-            "Planificación de entrenamientos para U10-U12",
-            "Juegos lúdicos para el aprendizaje",
-            "Fundamentos del pase y el bote",
-            "Psicología infantil aplicada al deporte"
-        ],
-        instructor: {
-            name: "Laura Martínez",
-            role: "Especialista en Mini-Básquet",
-            bio: "Entrenadora certificada con 10 años de experiencia en categorías de iniciación. Autora del libro 'Jugar para Aprender'.",
-            image: "https://i.pravatar.cc/150?u=laura"
-        }
-    },
-    {
-        id: 2,
-        title: "Desarrollo de Habilidades Individuales",
-        category: "Técnica",
-        level: "Intermedio",
-        price: "$59.99",
-        image: "https://firebasestorage.googleapis.com/v0/b/basquet-formativo.appspot.com/o/images%2Ffloor-texture.jpg?alt=media&token=2ac1c71a-742b-4661-a781-dec60b85f8a7",
-        description: "Métodos avanzados para mejorar el bote, tiro y pase de tus jugadores con ejercicios específicos. Enfocado en la biomecánica y la corrección de errores comunes.",
-        features: [
-            "Mecánica de tiro avanzada",
-            "Drills de manejo de balón (Ball handling)",
-            "Finalizaciones cerca del aro",
-            "Lectura de juego 1vs1"
-        ],
-        instructor: {
-            name: "Carlos Rivera",
-            role: "Skills Coach",
-            bio: "Ha trabajado con jugadores profesionales en el desarrollo de técnica individual. Fundador de CR Hoops.",
-            image: "https://i.pravatar.cc/150?u=carlos"
-        }
-    },
-    {
-        id: 3,
-        title: "Defensa y Estrategia de Equipo",
-        category: "Avanzado",
-        level: "Avanzado",
-        price: "$79.99",
-        image: "https://res.cloudinary.com/dzqdjsrez/image/upload/v1726054543/MBF_OKK_wcguyw.png",
-        description: "Domina los sistemas defensivos y ofensivos modernos. Análisis táctico y gestión de partidos para entrenadores que buscan competir al más alto nivel.",
-        features: [
-            "Defensa individual y zonal",
-            "Transición defensiva y balance",
-            "Sistemas ofensivos contra zona",
-            "Scouting del rival"
-        ],
-        instructor: {
-            name: "Marcus Thorne",
-            role: "Director Deportivo",
-            bio: "Ex-entrenador profesional con experiencia en ligas europeas. Especialista en táctica defensiva.",
-            image: "https://i.pravatar.cc/150?u=marcus"
-        }
-    },
-    {
-        id: 4,
-        title: "Preparación Física Especializada",
-        category: "Físico",
-        level: "Todo Nivel",
-        price: "$45.00",
-        image: "https://firebasestorage.googleapis.com/v0/b/basquet-formativo.appspot.com/o/images%2FCancha-Blanca-50.png?alt=media&token=fb103b37-5df5-46f2-8521-39259a133baf",
-        description: "Rutinas y planes de entrenamiento físico adaptados a las diferentes edades y niveles de competición. Prevención de lesiones y desarrollo atlético.",
-        features: [
-            "Entrenamiento de fuerza en jóvenes",
-            "Mejora de la resistencia y velocidad",
-            "Protocolos de calentamiento y vuelta a la calma",
-            "Prevención de lesiones comunes (tobillo, rodilla)"
-        ],
-        instructor: {
-            name: "Sarah Jenkins",
-            role: "Preparadora Física",
-            bio: "Doctora en Ciencias del Deporte. Especializada en prevención de lesiones y rendimiento atlético en baloncesto.",
-            image: "https://i.pravatar.cc/150?u=sarah"
-        }
-    },
-    {
-        id: 5,
-        title: "Psicología del Entrenador",
-        category: "Gestión",
-        level: "Pro",
-        price: "$55.00",
-        image: "https://firebasestorage.googleapis.com/v0/b/basquet-formativo.appspot.com/o/images%2Ffloor-texture.jpg?alt=media&token=2ac1c71a-742b-4661-a781-dec60b85f8a7",
-        description: "Herramientas para liderar grupos, motivar jugadores y gestionar la presión en la competición. Construye una cultura de equipo ganadora.",
-        features: [
-            "Liderazgo y comunicación efectiva",
-            "Gestión de conflictos en el equipo",
-            "Motivación y establecimiento de objetivos",
-            "Relación con padres y directivos"
-        ],
-        instructor: {
-            name: "Dr. Roberto Alomar",
-            role: "Psicólogo Deportivo",
-            bio: "Asesor de equipos nacionales. Ayuda a entrenadores a gestionar la presión y construir mentalidad ganadora.",
-            image: "https://i.pravatar.cc/150?u=roberto"
-        }
-    },
-    {
-        id: 6,
-        title: "Scouting y Videoanálisis",
-        category: "Tecnología",
-        level: "Avanzado",
-        price: "$65.00",
-        image: "https://firebasestorage.googleapis.com/v0/b/basquet-formativo.appspot.com/o/images%2Ffloor-texture.jpg?alt=media&token=2ac1c71a-742b-4661-a781-dec60b85f8a7",
-        description: "Aprende a utilizar el video para analizar rivales y mejorar el rendimiento de tu propio equipo. Software y metodologías de trabajo.",
-        features: [
-            "Herramientas de videoanálisis",
-            "Creación de informes de scouting",
-            "Análisis estadístico avanzado",
-            "Presentación de video a jugadores"
-        ],
-        instructor: {
-            name: "Javier Méndez",
-            role: "Analista de Video",
-            bio: "Scout profesional para equipos de liga mayor. Experto en Synergy y Hudl.",
-            image: "https://i.pravatar.cc/150?u=javier"
-        }
+import { directus } from './directus';
+import { readItems } from '@directus/sdk';
+
+export interface Instructor {
+    id: string;
+    nombre: string;
+    apellido: string;
+    bio: string;
+    foto: string;
+    especialidad: string;
+    email?: string;
+    experiencia_anios?: number;
+    instagram?: string;
+    youtube?: string;
+}
+
+export async function getInstructors(): Promise<Instructor[]> {
+    try {
+        const result = await directus.request(readItems('instructores', {
+            sort: ['nombre']
+        }));
+        return result as unknown as Instructor[];
+    } catch (error) {
+        console.error('Error fetching instructors:', error);
+        return [];
     }
-];
+}
+
+
+export interface Categoria {
+    id: string;
+    nombre: string;
+    slug: string;
+}
+
+export interface Clase {
+    id: string;
+    titulo: string;
+    slug: string;
+    descripcion: string;
+    contenido: string;
+    Video: string; // Nombre exacto en Directus
+    video_url?: string;
+    duracion: number;
+    orden: number;
+    es_gratis: boolean;
+}
+
+export interface ClaseProgress {
+    clase: string;
+    completado: boolean;
+}
+
+
+export interface Course {
+    id: string;
+    titulo: string;
+    slug: string;
+    descripcion: string;
+    descripcion_corta: string;
+    nivel: string;
+    precio: number;
+    moneda: string;
+    Imagen_Portada: string; // Nombre exacto corregido
+    estado: string;
+    destacado: boolean;
+    categorias: { categoria: Categoria }[]; // M2M junction
+    instructores: { instructor: Instructor }[]; // M2M junction
+    clases: Clase[]; // Alias O2M
+}
+
+const DIRECTUS_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://basquet-formativo-directus-d4c125-76-13-172-131.traefik.me';
+const ASSETS_URL = `${DIRECTUS_URL.replace(/\/$/, '')}/assets/`;
+const DEFAULT_PLACEHOLDER = 'https://firebasestorage.googleapis.com/v0/b/basquet-formativo.appspot.com/o/images%2FCancha-Blanca-50.png?alt=media&token=fb103b37-5df5-46f2-8521-39259a133baf';
+
+export function getImageUrl(id: string | null) {
+    if (!id) return DEFAULT_PLACEHOLDER;
+    if (typeof id === 'string' && id.startsWith('http')) return id;
+    const imageId = typeof id === 'object' ? (id as any)?.id : id;
+    if (!imageId) return DEFAULT_PLACEHOLDER;
+    return `${ASSETS_URL}${imageId}`;
+}
+
+export async function getCourses(): Promise<Course[]> {
+    try {
+        console.log('Fetching courses from:', process.env.NEXT_PUBLIC_DIRECTUS_URL);
+        const result = await directus.request(readItems('cursos', {
+            fields: [
+                '*',
+                { categorias: [{ categoria: ['nombre', 'slug'] }] },
+                { instructores: [{ instructor: ['nombre', 'apellido', 'foto'] }] }
+            ],
+        }));
+        return result as unknown as Course[];
+    } catch (error: any) {
+        console.error('Error fetching courses from Directus:', {
+            message: error.message,
+            status: error.response?.status,
+            errors: error.errors
+        });
+        return [];
+    }
+}
+
+export async function getCourseBySlug(slug: string): Promise<Course | null> {
+    try {
+        const result = await directus.request(readItems('cursos', {
+            filter: { slug: { _eq: slug } },
+            fields: [
+                '*',
+                { categorias: [{ categoria: ['*'] }] },
+                { instructores: [{ instructor: ['*'] }] }
+            ],
+            limit: 1
+        }));
+
+        if (!result || result.length === 0) return null;
+
+        const course = result[0] as unknown as Course;
+
+        // Fetch Clases
+        try {
+            const clasesResult = await directus.request(readItems('clases', {
+                filter: { curso: { _eq: course.id } },
+                sort: ['orden']
+            }));
+            course.clases = clasesResult as unknown as Clase[];
+        } catch (claseError) {
+            console.warn(`No se pudieron cargar las clases del curso ${slug}:`, claseError);
+            course.clases = [];
+        }
+
+        return course;
+    } catch (error: any) {
+        console.error(`Error fetching course with slug ${slug}:`, error.message || error);
+        return null;
+    }
+}
+
+export async function getUserCourses(userId: string): Promise<Course[]> {
+    try {
+        const result = await directus.request(readItems('accesos_cursos', {
+            filter: {
+                usuario: { _eq: userId },
+                activo: { _eq: true }
+            },
+            fields: [
+                'curso.*',
+                { curso: [{ instructores: [{ instructor: ['nombre', 'apellido'] }] }] }
+            ]
+        }));
+        return result.map((a: any) => a.curso as Course);
+    } catch (error) {
+        console.error('Error fetching user courses:', error);
+        return [];
+    }
+}
+
+export async function getCourseProgress(userId: string, courseId: string): Promise<ClaseProgress[]> {
+    try {
+        const result = await directus.request(readItems('progreso_clases', {
+            filter: {
+                usuario: { _eq: userId },
+                curso: { _eq: courseId },
+                completado: { _eq: true }
+            },
+            fields: ['clase', 'completado']
+        }));
+        return result as ClaseProgress[];
+    } catch (error) {
+        return [];
+    }
+}
+
