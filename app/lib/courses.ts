@@ -71,6 +71,7 @@ export interface Course {
 }
 
 const DIRECTUS_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://localhost:8055';
+const ADMIN_TOKEN = process.env.DIRECTUS_ADMIN_TOKEN;
 const ASSETS_URL = `${DIRECTUS_URL.replace(/\/$/, '')}/assets/`;
 const DEFAULT_PLACEHOLDER = 'https://firebasestorage.googleapis.com/v0/b/basquet-formativo.appspot.com/o/images%2FCancha-Blanca-50.png?alt=media&token=fb103b37-5df5-46f2-8521-39259a133baf';
 
