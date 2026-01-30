@@ -1,5 +1,15 @@
 import type { NextConfig } from "next";
 
+const getDirectusHostname = () => {
+  const url = process.env.NEXT_PUBLIC_DIRECTUS_URL;
+  if (!url) return 'localhost';
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url.replace(/^https?:\/\//, '').split(':')[0];
+  }
+};
+
 const nextConfig: NextConfig = {
   output: "standalone",
   images: {
@@ -18,7 +28,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'http',
-        hostname: 'basquet-formativo-directus-8ee5cd-76-13-172-131.traefik.me',
+        hostname: getDirectusHostname(),
+      },
+      {
+        protocol: 'https',
+        hostname: getDirectusHostname(),
       },
     ],
   },
