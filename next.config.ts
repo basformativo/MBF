@@ -27,6 +27,10 @@ const nextConfig: NextConfig = {
         hostname: 'i.pravatar.cc',
       },
       {
+        protocol: 'https',
+        hostname: 'directuscontrol.basketformativo.com',
+      },
+      {
         protocol: 'http',
         hostname: getDirectusHostname(),
       },
