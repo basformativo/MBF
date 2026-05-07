@@ -153,7 +153,7 @@ export default async function Home() {
               <img
                 alt="Entrenador en acción"
                 className="w-full h-[600px] object-cover filter grayscale group-hover:grayscale-0 transition-all duration-700"
-                src={data?.cursos_imagen_destacada ? getImageUrl(data.cursos_imagen_destacada) : "/entrenador_en_accion.png"}
+                src={data?.cursos_imagen_destacada ? getImageUrl(data.cursos_imagen_destacada) : "https://directuscontrol.basketformativo.com/assets/ec337dc4-1de0-4de7-9d35-e2cfe27afd51"}
               />
               <div className="absolute top-6 right-6 bg-primary text-white w-24 h-24 rounded-full flex items-center justify-center animate-spin-slow">
                 <svg className="absolute w-full h-full" viewBox="0 0 100 100">
@@ -257,7 +257,7 @@ export default async function Home() {
               <div className="relative">
                 <div className="rounded-[3rem] overflow-hidden shadow-2xl border-2 border-border-site group">
                   <img 
-                    src={data?.mentorias_imagen ? getImageUrl(data.mentorias_imagen) : "/mentoria_1a1.png"} 
+                    src={data?.mentorias_imagen ? getImageUrl(data.mentorias_imagen) : "https://directuscontrol.basketformativo.com/assets/78a0c97f-6c61-42bc-a1a8-637637f53051"} 
                     alt="Mentoria 1 a 1" 
                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
                   />
