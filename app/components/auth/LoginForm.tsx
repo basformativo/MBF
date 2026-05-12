@@ -31,7 +31,7 @@ function LoginFormInner() {
             setError(result.error);
             setIsLoading(false);
         } else {
-            if (result.isAdmin) {
+            if (result?.isAdmin) {
                 router.push('/admin/compras');
             } else {
                 router.push('/cursos');
