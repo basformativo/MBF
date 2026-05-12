@@ -139,10 +139,13 @@ export async function getCourseBySlug(slug: string): Promise<Course | null> {
 
 export async function getUserCourses(userId: string): Promise<Course[]> {
     try {
-        const result = await adminClient.request(readItems('accesos_cursos', {
+        const result = await adminClient.request(readItems('compras' as any, {
             filter: {
                 usuario: { _eq: userId },
-                activo: { _eq: true }
+                _or: [
+                    { estado: { _in: ['aprobado', 'Aprobado'] } },
+                    { estado_pago: { _in: ['aprobado', 'Aprobado'] } }
+                ]
             },
             fields: [
                 'curso.*',
@@ -151,8 +154,30 @@ export async function getUserCourses(userId: string): Promise<Course[]> {
         }));
         return result.map((a: any) => a.curso as Course);
     } catch (error) {
-        console.error('Error fetching user courses:', error);
+        console.error('Error fetching user courses from purchases:', error);
         return [];
+    }
+}
+
+export async function getApprovedCourseAccess(userId: string, courseId: string) {
+    try {
+        const result = await adminClient.request(readItems('compras' as any, {
+            filter: {
+                usuario: { _eq: userId },
+                curso: { _eq: courseId },
+                _or: [
+                    { estado: { _in: ['aprobado', 'Aprobado'] } },
+                    { estado_pago: { _in: ['aprobado', 'Aprobado'] } }
+                ]
+            },
+            fields: ['id', 'curso.slug'],
+            limit: 1
+        }));
+
+        return (result as any[])[0] || null;
+    } catch (error) {
+        console.error('Error checking approved course access:', error);
+        return null;
     }
 }
 export interface Comment {

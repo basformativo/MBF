@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { createDirectus, rest, staticToken, readMe, readItems } from '@directus/sdk';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -73,46 +74,119 @@ export default async function AdminComprasPage() {
 
     const pendientes = (solicitudes as any[]).filter(s => s.estado === 'pendiente' || !s.estado);
     const procesadas = (solicitudes as any[]).filter(s => s.estado === 'aprobado' || s.estado === 'rechazado');
+    const aprobadas = (solicitudes as any[]).filter(s => s.estado === 'aprobado');
+
+    const totalVentas = aprobadas.reduce((acc, s) => acc + (Number(s.curso?.precio) || 0), 0);
 
     return (
         <>
             <Header />
             <main className="min-h-screen bg-background-light dark:bg-background-dark py-12">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="mb-10">
-                        <h1 className="text-4xl font-black display-font mb-1">Panel de Compras</h1>
-                        <p className="text-gray-500 dark:text-gray-400">
-                            {pendientes.length} pendiente{pendientes.length !== 1 ? 's' : ''} · {procesadas.length} procesada{procesadas.length !== 1 ? 's' : ''}
-                        </p>
+                    <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                        <div>
+                            <h1 className="text-4xl font-black display-font mb-1">Panel de Control</h1>
+                            <p className="text-gray-500 dark:text-gray-400">
+                                Gestión de alumnos y solicitudes de inscripción
+                            </p>
+                        </div>
                     </div>
 
-                    {/* Pendientes */}
-                    {pendientes.length > 0 && (
-                        <section className="mb-12">
-                            <h2 className="text-xl font-bold uppercase tracking-widest mb-4 text-yellow-600 dark:text-yellow-400">
-                                Pendientes de revisión
-                            </h2>
-                            <div className="space-y-4">
-                                {pendientes.map((s: any) => (
-                                    <PurchaseCard key={s.id} solicitud={s} directusUrl={DIRECTUS_URL} />
-                                ))}
-                            </div>
-                        </section>
-                    )}
+                    {/* Dashboard Stats */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+                        <StatCard 
+                            label="Pendientes" 
+                            value={pendientes.length.toString()} 
+                            icon="pending_actions" 
+                            color="text-yellow-600 bg-yellow-100" 
+                        />
+                        <StatCard 
+                            label="Aprobadas" 
+                            value={aprobadas.length.toString()} 
+                            icon="check_circle" 
+                            color="text-green-600 bg-green-100" 
+                        />
+                        <StatCard 
+                            label="Total Ventas" 
+                            value={`$${totalVentas}`} 
+                            icon="payments" 
+                            color="text-primary bg-primary/10" 
+                        />
+                        <StatCard 
+                            label="Alumnos Registrados" 
+                            value={solicitudes.length.toString()} 
+                            icon="people" 
+                            color="text-blue-600 bg-blue-100" 
+                        />
+                    </div>
 
-                    {/* Procesadas */}
-                    {procesadas.length > 0 && (
-                        <section>
-                            <h2 className="text-xl font-bold uppercase tracking-widest mb-4 text-gray-400">
-                                Procesadas
-                            </h2>
-                            <div className="space-y-4">
-                                {procesadas.map((s: any) => (
-                                    <PurchaseCard key={s.id} solicitud={s} directusUrl={DIRECTUS_URL} />
-                                ))}
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-12">
+                        <div className="lg:col-span-3">
+                            {/* Pendientes */}
+                            {pendientes.length > 0 && (
+                                <section className="mb-12">
+                                    <h2 className="text-xl font-bold uppercase tracking-widest mb-4 text-yellow-600 dark:text-yellow-400">
+                                        Pendientes de revisión
+                                    </h2>
+                                    <div className="space-y-4">
+                                        {pendientes.map((s: any) => (
+                                            <PurchaseCard key={s.id} solicitud={s} directusUrl={DIRECTUS_URL} />
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* Procesadas */}
+                            {procesadas.length > 0 && (
+                                <section>
+                                    <h2 className="text-xl font-bold uppercase tracking-widest mb-4 text-gray-400">
+                                        Procesadas recientemente
+                                    </h2>
+                                    <div className="space-y-4">
+                                        {procesadas.slice(0, 5).map((s: any) => (
+                                            <PurchaseCard key={s.id} solicitud={s} directusUrl={DIRECTUS_URL} />
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+                        </div>
+
+                        <div className="lg:col-span-1 space-y-6">
+                            <div className="bg-white dark:bg-surface-dark p-6 rounded-3xl border border-border-light dark:border-border-dark shadow-sm">
+                                <h3 className="font-bold display-font uppercase tracking-wider text-sm mb-4">Accesos Rápidos</h3>
+                                <div className="space-y-3">
+                                    <a 
+                                        href={DIRECTUS_URL} 
+                                        target="_blank" 
+                                        className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-black/20 hover:bg-primary/5 transition-colors group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="material-icons text-primary text-sm">settings</span>
+                                            <span className="text-sm font-semibold">CMS Directus</span>
+                                        </div>
+                                        <span className="material-icons text-xs text-gray-400 group-hover:translate-x-1 transition-transform">open_in_new</span>
+                                    </a>
+                                    <Link 
+                                        href="/cursos" 
+                                        className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-black/20 hover:bg-primary/5 transition-colors group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="material-icons text-primary text-sm">visibility</span>
+                                            <span className="text-sm font-semibold">Ver Web Pública</span>
+                                        </div>
+                                        <span className="material-icons text-xs text-gray-400 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                                    </Link>
+                                </div>
                             </div>
-                        </section>
-                    )}
+
+                            <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10">
+                                <h3 className="font-bold display-font uppercase tracking-wider text-xs text-primary mb-2">Ayuda Administrador</h3>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                                    Al aprobar una compra, el alumno recibirá acceso inmediato al curso en su panel "Mis Cursos". Si rechazas una solicitud, puedes dejar una nota explicando el motivo.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
                     {(solicitudes as any[]).length === 0 && (
                         <div className="text-center py-20 text-gray-400">
@@ -199,6 +273,22 @@ function InfoRow({ label, value, highlight = false }: { label: string; value?: s
             <p className={`font-medium ${highlight ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-800 dark:text-gray-200'}`}>
                 {value || '—'}
             </p>
+        </div>
+    );
+}
+
+function StatCard({ label, value, icon, color }: { label: string; value: string; icon: string; color: string }) {
+    return (
+        <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-border-light dark:border-border-dark shadow-sm">
+            <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl ${color}`}>
+                    <span className="material-icons">{icon}</span>
+                </div>
+                <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">{label}</p>
+                    <p className="text-2xl font-black">{value}</p>
+                </div>
+            </div>
         </div>
     );
 }

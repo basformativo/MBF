@@ -1,13 +1,13 @@
 import { cookies } from 'next/headers';
 import Link from 'next/link';
-import { createDirectus, rest, staticToken, readMe, readItems } from '@directus/sdk';
+import { createDirectus, rest, staticToken, readMe } from '@directus/sdk';
+import { getApprovedCourseAccess } from '../lib/courses';
 
 interface Props {
     courseId: string;
 }
 
 const DIRECTUS_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://localhost:8055';
-const ADMIN_TOKEN = process.env.DIRECTUS_ADMIN_TOKEN || 'WmX7KmV0IYu8uqyJoUnt7lCLRlDO-_9a';
 
 export default async function EnrollButton({ courseId }: Props) {
     const cookieStore = await cookies();
@@ -24,35 +24,22 @@ export default async function EnrollButton({ courseId }: Props) {
         );
     }
 
-    // Verificar si ya tiene acceso usando el cliente administrativo
-    const adminClient = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(ADMIN_TOKEN));
     const userClient = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(token));
-    
+
     let hasAccess = false;
     let courseSlug = '';
 
     try {
-        // Obtenemos el ID del usuario actual con su propio token
         const user = await userClient.request(readMe());
-        
-        // Verificamos el acceso con el token ADMIN para evitar líos de permisos del rol Alumno
-        const accessArr = await adminClient.request(readItems('accesos_cursos', {
-            filter: {
-                usuario: { _eq: user.id },
-                curso: { _eq: courseId },
-                activo: { _eq: true }
-            },
-            fields: ['id', 'curso.slug'],
-            limit: 1
-        }));
-        
-        if (accessArr && (accessArr as any[]).length > 0) {
+        const access = await getApprovedCourseAccess(user.id, courseId);
+
+        if (access) {
             hasAccess = true;
-            courseSlug = (accessArr as any[])[0].curso.slug;
+            courseSlug = access.curso?.slug || '';
         }
-    } catch (e: any) {
-        // El error {} suele ser un objeto de error de Directus no serializado
-        console.error('Error verificando acceso (EnrollButton):', e?.message || 'Error desconocido');
+    } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Error desconocido';
+        console.error('Error verificando acceso (EnrollButton):', message);
     }
 
     if (hasAccess) {
@@ -61,7 +48,7 @@ export default async function EnrollButton({ courseId }: Props) {
                 href={`/cursos/${courseSlug}`}
                 className="bg-green-600 hover:bg-green-700 text-white px-10 py-5 rounded-full font-bold uppercase tracking-widest text-lg w-full md:w-auto shadow-lg transition-all inline-block text-center"
             >
-                Ya tienes acceso • Ver curso
+                Ya tienes acceso - Ver curso
             </Link>
         );
     }

@@ -1,12 +1,28 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { logoutAction } from "../lib/actions";
+import { createDirectus, rest, staticToken, readMe } from "@directus/sdk";
 import MobileMenu from "./MobileMenu";
 import ThemeToggle from "./ThemeToggle";
 
+const DIRECTUS_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://localhost:8055';
+const ADMIN_ROLE_ID_KNOWN = '583770fb-b647-4f1d-ade0-d0fb4851d559';
+
 export default async function Header() {
     const cookieStore = await cookies();
-    const isLoggedIn = cookieStore.has('auth_session');
+    const token = cookieStore.get('auth_session')?.value;
+    const isLoggedIn = !!token;
+
+    let isAdmin = false;
+    if (token) {
+        try {
+            const client = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(token));
+            const user = await client.request(readMe({ fields: ['role'] }));
+            isAdmin = user.role === ADMIN_ROLE_ID_KNOWN;
+        } catch (e) {
+            // No es admin o error de token
+        }
+    }
 
     return (
         <header className="w-full border-b border-border-site bg-surface-site sticky top-0 z-50">
@@ -33,11 +49,21 @@ export default async function Header() {
                         <Link href="/contacto" className="text-sm font-semibold uppercase hover:text-primary transition-colors">
                             Contacto
                         </Link>
+                        {isAdmin && (
+                            <Link href="/admin/compras" className="text-sm font-black uppercase text-primary hover:text-primary/80 transition-colors border-l border-border-site pl-8">
+                                Administración
+                            </Link>
+                        )}
                     </nav>
                     <div className="flex items-center">
                         <div className="hidden lg:flex items-center space-x-4">
                             {isLoggedIn ? (
                                 <div className="flex items-center space-x-4">
+                                    {isAdmin && (
+                                        <Link href="/admin/compras" className="text-xs font-bold uppercase text-primary hover:text-primary/80 transition-all">
+                                            Admin
+                                        </Link>
+                                    )}
                                     <Link href="/dashboard" className="text-xs font-bold uppercase bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-full hover:bg-primary dark:hover:bg-primary hover:text-white dark:hover:text-white transition-all">
                                         Mis Cursos
                                     </Link>

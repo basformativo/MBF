@@ -5,6 +5,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import CheckoutForm from './CheckoutForm';
 import { adminClient } from '../../lib/directus';
+import { getApprovedCourseAccess } from '../../lib/courses';
 import { readItems } from '@directus/sdk';
 
 const DIRECTUS_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://localhost:8055';
@@ -46,13 +47,10 @@ export default async function CheckoutPage({
     if (!courses || courses.length === 0) notFound();
     const course = courses[0];
 
-    // Verificar si ya tiene acceso
-    const accesos = await adminClient.request(readItems('accesos_cursos', {
-        filter: { usuario: { _eq: user.id }, curso: { _eq: courseId }, activo: { _eq: true } },
-        limit: 1,
-    })).catch(() => []);
+    // Verificar si ya tiene acceso por compra aprobada en Directus
+    const access = await getApprovedCourseAccess(user.id, courseId);
 
-    if ((accesos as any[]).length > 0) {
+    if (access) {
         redirect('/dashboard');
     }
 

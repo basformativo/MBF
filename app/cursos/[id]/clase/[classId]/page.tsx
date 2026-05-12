@@ -1,12 +1,12 @@
 
 import Header from "../../../../components/Header";
 import Footer from "../../../../components/Footer";
-import { getCourseBySlug, getImageUrl, getCourseProgress, getComments } from "../../../../lib/courses";
+import { getCourseBySlug, getImageUrl, getCourseProgress, getComments, getApprovedCourseAccess } from "../../../../lib/courses";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { loginAction, buyCourseAction, toggleProgressAction } from "../../../../lib/actions";
-import { createDirectus, rest, staticToken, readMe, readItems } from "@directus/sdk";
+import { toggleProgressAction } from "../../../../lib/actions";
+import { createDirectus, rest, staticToken, readMe } from "@directus/sdk";
 import CommentSection from "../../../../components/CommentSection";
 
 export const dynamic = 'force-dynamic';
@@ -41,21 +41,12 @@ export default async function ClasePage({
 
     if (token) {
         try {
-            const adminClient = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(process.env.DIRECTUS_ADMIN_TOKEN || 'WmX7KmV0IYu8uqyJoUnt7lCLRlDO-_9a'));
             const userClient = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(token));
             
             user = await userClient.request(readMe());
             
             // 1. Verificar si tiene acceso al curso
-            const access = await adminClient.request(readItems('accesos_cursos', {
-                filter: {
-                    usuario: { _eq: user.id },
-                    curso: { _eq: course.id },
-                    activo: { _eq: true }
-                },
-                limit: 1
-            }));
-            hasAccess = (access as any[]).length > 0;
+            hasAccess = !!(await getApprovedCourseAccess(user.id, course.id));
 
             // 2. Obtener clases completadas
             const progress = await getCourseProgress(user.id, course.id);

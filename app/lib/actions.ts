@@ -3,7 +3,7 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { createDirectus, rest, createUser, staticToken, createItem, updateItem, readItems, readItem, readMe } from '@directus/sdk';
+import { createDirectus, rest, createUser, staticToken, createItem, updateItem, readItems, readMe } from '@directus/sdk';
 import { redirect } from 'next/navigation';
 
 import { adminClient, DIRECTUS_URL, ADMIN_TOKEN } from './directus';
@@ -69,8 +69,22 @@ export async function loginAction(formData?: FormData) {
                 secure: process.env.NODE_ENV === 'production',
                 maxAge: data.data.expires / 1000
             });
+
+            // Verificar si es admin para redirección
+            let isAdmin = false;
+            try {
+                const client = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(data.data.access_token));
+                const user = await client.request(readMe({ fields: ['role'] }));
+                
+                // Usamos el ID conocido o verificamos el objeto del rol
+                const ADMIN_ROLE_ID_KNOWN = '583770fb-b647-4f1d-ade0-d0fb4851d559';
+                isAdmin = user.role === ADMIN_ROLE_ID_KNOWN;
+            } catch (e) {
+                console.error('Error verificando admin en login:', e);
+            }
+
             revalidatePath('/');
-            return { success: true };
+            return { success: true, isAdmin };
         } else {
             return { error: 'Credenciales inválidas' };
         }
@@ -246,28 +260,7 @@ export async function submitPurchaseAction(formData: FormData) {
 
 export async function approvePurchaseAction(solicitudId: string) {
     try {
-        // Obtener la solicitud
-        const solicitud = await adminClient.request(readItem('compras' as any, solicitudId));
-
-        // Crear acceso al curso
-        const existing = await adminClient.request(readItems('accesos_cursos', {
-            filter: {
-                usuario: { _eq: (solicitud as any).usuario },
-                curso: { _eq: (solicitud as any).curso },
-            }
-        }));
-
-        if (existing.length === 0) {
-            await adminClient.request(createItem('accesos_cursos', {
-                usuario: (solicitud as any).usuario,
-                curso: (solicitud as any).curso,
-                activo: true,
-            }));
-        } else {
-            await adminClient.request(updateItem('accesos_cursos', existing[0].id, { activo: true }));
-        }
-
-        // Marcar solicitud como aprobada
+        // Marcar solicitud como aprobada. El acceso se comprueba desde compras.
         await adminClient.request(updateItem('compras' as any, solicitudId, { 
             estado: 'aprobado',
             estado_pago: 'aprobado' // Normalizado a minúsculas
