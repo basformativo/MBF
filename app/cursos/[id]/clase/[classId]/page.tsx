@@ -88,11 +88,17 @@ export default async function ClasePage({
                                     <div className="w-full h-full">
                                         {currentClass.Video ? (
                                             <video
-                                                src={getImageUrl(currentClass.Video)}
                                                 controls
                                                 className="w-full h-full object-contain"
                                                 poster={getImageUrl(course.Imagen_Portada)}
-                                            />
+                                                playsInline
+                                            >
+                                                {/* Intentar MP4 primero (Directus puede transcodificar con ?format=mp4) */}
+                                                <source src={`${getImageUrl(currentClass.Video)}?format=mp4`} type="video/mp4" />
+                                                {/* Fallback al archivo original (.mov) */}
+                                                <source src={getImageUrl(currentClass.Video)} type="video/quicktime" />
+                                                <source src={getImageUrl(currentClass.Video)} type="video/mp4" />
+                                            </video>
                                         ) : currentClass.video_url ? (
                                             <iframe
                                                 src={currentClass.video_url.replace('watch?v=', 'embed/')}

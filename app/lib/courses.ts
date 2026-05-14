@@ -121,6 +121,7 @@ export async function getCourseBySlug(slug: string): Promise<Course | null> {
         try {
             const { adminClient } = await import('./directus');
             const clasesResult = await adminClient.request(readItems('clases', {
+                fields: ['*'] as any,
                 filter: { curso: { _eq: course.id } },
                 sort: ['orden']
             }));
