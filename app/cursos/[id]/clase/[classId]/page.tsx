@@ -92,12 +92,11 @@ export default async function ClasePage({
                                                 className="w-full h-full object-contain"
                                                 poster={getImageUrl(course.Imagen_Portada)}
                                                 playsInline
+                                                preload="metadata"
                                             >
-                                                {/* Intentar MP4 primero (Directus puede transcodificar con ?format=mp4) */}
-                                                <source src={`${getImageUrl(currentClass.Video)}?format=mp4`} type="video/mp4" />
-                                                {/* Fallback al archivo original (.mov) */}
-                                                <source src={getImageUrl(currentClass.Video)} type="video/quicktime" />
-                                                <source src={getImageUrl(currentClass.Video)} type="video/mp4" />
+                                                {/* Proxy que re-sirve el archivo (incluso .MOV) como video/mp4
+                                                    para compatibilidad con Chrome, Firefox y Android */}
+                                                <source src={`/api/video/${currentClass.Video}`} type="video/mp4" />
                                             </video>
                                         ) : currentClass.video_url ? (
                                             <iframe
