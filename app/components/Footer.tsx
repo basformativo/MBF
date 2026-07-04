@@ -43,7 +43,22 @@ export default function Footer() {
                             <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                                 <li><a className="hover:text-primary" href="https://x.com/MBFormadores" target="_blank" rel="noopener noreferrer">Twitter / X</a></li>
                                 <li><a className="hover:text-primary" href="https://facebook.com" target="_blank" rel="noopener noreferrer">Facebook</a></li>
-                                <li><a className="hover:text-primary" href="https://www.instagram.com/basketformativo2026?igsh=aHJ1NXBhOHkzODk2&utm_source=qr" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+                                <li>
+                                    <a
+                                        className="hover:text-primary inline-flex items-center"
+                                        href="https://www.instagram.com/basketformativo2026?igsh=aHJ1NXBhOHkzODk2&utm_source=qr"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        aria-label="Instagram"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                                        </svg>
+                                        <span className="sr-only">Instagram</span>
+                                    </a>
+                                </li>
                                 <li><a className="hover:text-primary" href="https://wa.me/5491166557437" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
                             </ul>
                         </div>
