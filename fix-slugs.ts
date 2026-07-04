@@ -6,8 +6,16 @@
  * Uso: npx tsx fix-slugs.ts
  */
 
+import * as dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.local' });
+
 const DIRECTUS_URL = 'https://directuscontrol.basketformativo.com';
-const ADMIN_TOKEN = 'WmX7KmV0IYu8uqyJoUnt7lCLRlDO-_9a';
+const ADMIN_TOKEN = process.env.DIRECTUS_ADMIN_TOKEN;
+
+if (!ADMIN_TOKEN) {
+    throw new Error('DIRECTUS_ADMIN_TOKEN no está definida. Configurala en .env.local antes de ejecutar este script.');
+}
 
 // ---------- helpers ----------
 

@@ -1,7 +1,14 @@
 import { createDirectus, rest, staticToken, createItems, createItem } from '@directus/sdk';
+import * as dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.local' });
 
 const DIRECTUS_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://localhost:8055';
-const ADMIN_TOKEN = 'WmX7KmV0IYu8uqyJoUnt7lCLRlDO-_9a';
+const ADMIN_TOKEN = process.env.DIRECTUS_ADMIN_TOKEN;
+
+if (!ADMIN_TOKEN) {
+    throw new Error('DIRECTUS_ADMIN_TOKEN no está definida. Configurala en .env.local antes de ejecutar este script.');
+}
 
 const client = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(ADMIN_TOKEN));
 

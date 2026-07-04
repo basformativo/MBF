@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createDirectus, rest, staticToken, readMe, readItems } from '@directus/sdk';
+import { DIRECTUS_URL, adminClient } from '../../../lib/directus';
+import { getApprovedCourseAccess } from '../../../lib/courses';
 
-const DIRECTUS_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://localhost:8055';
 const ADMIN_TOKEN = process.env.DIRECTUS_ADMIN_TOKEN;
 
 export async function GET(
@@ -11,6 +13,40 @@ export async function GET(
 
     if (!fileId) {
         return new NextResponse('File ID requerido', { status: 400 });
+    }
+
+    // Buscar a qué clase/curso pertenece este archivo para poder verificar acceso
+    const clases = await adminClient.request(readItems('clases', {
+        filter: { Video: { _eq: fileId } },
+        fields: ['id', 'curso', 'es_gratis'] as any,
+        limit: 1,
+    }));
+    const clase = (clases as any[])[0];
+
+    if (!clase) {
+        return new NextResponse('Video no encontrado', { status: 404 });
+    }
+
+    const sessionToken = request.cookies.get('auth_session')?.value;
+
+    if (!sessionToken) {
+        return new NextResponse('No autorizado', { status: 401 });
+    }
+
+    let userId: string;
+    try {
+        const userClient = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(sessionToken));
+        const user = await userClient.request(readMe());
+        userId = user.id as string;
+    } catch (e) {
+        return new NextResponse('No autorizado', { status: 401 });
+    }
+
+    if (!clase.es_gratis) {
+        const access = await getApprovedCourseAccess(userId, clase.curso);
+        if (!access) {
+            return new NextResponse('Acceso denegado', { status: 403 });
+        }
     }
 
     const range = request.headers.get('range');
