@@ -28,24 +28,19 @@ export default async function AdminComprasPage() {
 
     const adminClient = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(ADMIN_TOKEN));
 
-    // Verificar rol admin (ID del rol administrador en Directus)
-    const ADMIN_ROLE_ID_KNOWN = '583770fb-b647-4f1d-ade0-d0fb4851d559';
-    let isAdmin = user.role === ADMIN_ROLE_ID_KNOWN;
-
-    // Si no coincide con el ID conocido, intentamos verificar dinámicamente
-    if (!isAdmin) {
-        try {
-            const roles = await adminClient.request(
-                (await import('@directus/sdk')).readItems('directus_roles' as any, {
-                    filter: { id: { _eq: user.role } },
-                    fields: ['admin_access'],
-                    limit: 1,
-                })
-            );
-            isAdmin = (roles as any[])[0]?.admin_access === true;
-        } catch {
-            // Si falla la consulta dinámica (ej. permisos), nos quedamos con el resultado de ADMIN_ROLE_ID_KNOWN
-        }
+    // Verificar rol admin consultando el rol real en Directus
+    let isAdmin = false;
+    try {
+        const roles = await adminClient.request(
+            readItems('directus_roles' as any, {
+                filter: { id: { _eq: user.role } },
+                fields: ['admin_access'],
+                limit: 1,
+            })
+        );
+        isAdmin = (roles as any[])[0]?.admin_access === true;
+    } catch {
+        // Si falla la consulta dinámica, no se concede acceso de administrador
     }
 
     if (!isAdmin) {

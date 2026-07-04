@@ -70,15 +70,18 @@ export async function loginAction(formData?: FormData) {
                 maxAge: data.data.expires / 1000
             });
 
-            // Verificar si es admin para redirección
+            // Verificar si es admin para redirección, consultando el rol real en Directus
             let isAdmin = false;
             try {
                 const client = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(data.data.access_token));
                 const user = await client.request(readMe({ fields: ['role'] }));
-                
-                // Usamos el ID conocido o verificamos el objeto del rol
-                const ADMIN_ROLE_ID_KNOWN = '583770fb-b647-4f1d-ade0-d0fb4851d559';
-                isAdmin = user.role === ADMIN_ROLE_ID_KNOWN;
+
+                const roles = await adminClient.request(readItems('directus_roles' as any, {
+                    filter: { id: { _eq: user.role } },
+                    fields: ['admin_access'],
+                    limit: 1,
+                }));
+                isAdmin = (roles as any[])[0]?.admin_access === true;
             } catch (e) {
                 console.error('Error verificando admin en login:', e);
             }

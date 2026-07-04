@@ -1,4 +1,5 @@
 import Link from "next/link";
+import sanitizeHtml from "sanitize-html";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { getHomePageData } from "./lib/home";
@@ -30,7 +31,7 @@ export default async function Home() {
               </div>
               <h1 className="text-6xl md:text-8xl display-font leading-none mb-6 text-text-site">
                 {data?.inicio_titulo ? (
-                  <div dangerouslySetInnerHTML={{ __html: data.inicio_titulo }} />
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(data.inicio_titulo) }} />
                 ) : (
                   <>MEJORA TU<br />JUEGO HOY</>
                 )}
@@ -177,7 +178,7 @@ export default async function Home() {
               <div className="border-t-4 border-primary pt-6">
                 <h2 className="text-4xl md:text-5xl display-font mb-4 text-text-site">
                   {data?.cursos_titulo ? (
-                    <div dangerouslySetInnerHTML={{ __html: data.cursos_titulo }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(data.cursos_titulo) }} />
                   ) : (
                     <>INNOVANDO CON<br />CONOCIMIENTO</>
                   )}
@@ -230,7 +231,7 @@ export default async function Home() {
                 <span className="text-primary font-bold uppercase tracking-widest text-sm mb-4 block">{data?.mentorias_subtitulo || "Experiencia Exclusiva"}</span>
                 <h2 className="text-5xl md:text-7xl display-font text-text-site mb-8 leading-none">
                   {data?.mentorias_titulo ? (
-                    <div dangerouslySetInnerHTML={{ __html: data.mentorias_titulo }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(data.mentorias_titulo) }} />
                   ) : (
                     <>MENTORÍAS<br /><span className="text-primary italic">1 A 1</span></>
                   )}

@@ -1,4 +1,5 @@
 
+import sanitizeHtml from "sanitize-html";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { getPodcastBySlug } from "../../lib/podcast";
@@ -110,7 +111,7 @@ export default async function PodcastDetailPage({
                 {/* Content */}
                 <section className="pb-20 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
                     <article className="prose prose-lg dark:prose-invert max-w-none first-letter:text-5xl first-letter:font-bold first-letter:text-primary first-letter:float-left first-letter:mr-3">
-                        <div dangerouslySetInnerHTML={{ __html: podcastItem.contenido }} />
+                        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(podcastItem.contenido) }} />
                     </article>
 
                     {/* Share / Tags */}

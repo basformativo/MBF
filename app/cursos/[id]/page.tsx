@@ -1,4 +1,5 @@
 
+import sanitizeHtml from "sanitize-html";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import Link from "next/link";
@@ -87,7 +88,7 @@ export default async function CourseDetailPage({
                                 </h2>
                                 <div
                                     className="prose dark:prose-invert max-w-none text-lg text-gray-700 dark:text-gray-300"
-                                    dangerouslySetInnerHTML={{ __html: course.descripcion }}
+                                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(course.descripcion) }}
                                 />
                             </div>
 
