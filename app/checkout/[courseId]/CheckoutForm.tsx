@@ -283,7 +283,7 @@ export default function CheckoutForm({ course, user }: Props) {
             <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-primary text-white py-5 rounded-full font-bold uppercase tracking-widest text-lg hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-accent text-white py-5 rounded-full font-bold uppercase tracking-widest text-lg hover:bg-accent/90 hover:shadow-lg hover:shadow-accent/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 {isLoading ? 'Enviando solicitud...' : 'Enviar comprobante e inscribirme'}
             </button>

@@ -17,7 +17,7 @@ export default async function EnrollButton({ courseId }: Props) {
         return (
             <Link
                 href="/login"
-                className="bg-primary hover:bg-primary/90 text-white px-10 py-5 rounded-full font-bold uppercase tracking-widest text-lg w-full md:w-auto shadow-lg hover:shadow-primary/30 transition-all inline-block text-center"
+                className="bg-accent hover:bg-accent/90 text-white px-10 py-5 rounded-full font-bold uppercase tracking-widest text-lg w-full md:w-auto shadow-lg hover:shadow-accent/30 transition-all inline-block text-center"
             >
                 Registrarse para inscribirse
             </Link>
@@ -56,7 +56,7 @@ export default async function EnrollButton({ courseId }: Props) {
     return (
         <Link
             href={`/checkout/${courseId}`}
-            className="bg-black dark:bg-white text-white dark:text-black hover:bg-primary hover:text-white px-10 py-5 rounded-full font-bold uppercase tracking-widest text-lg w-full md:w-auto shadow-lg transition-all inline-block text-center"
+            className="bg-accent hover:bg-accent/90 text-white px-10 py-5 rounded-full font-bold uppercase tracking-widest text-lg w-full md:w-auto shadow-lg transition-all inline-block text-center"
         >
             Comprar Curso
         </Link>

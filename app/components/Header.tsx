@@ -78,7 +78,7 @@ export default async function Header() {
                                     <Link href="/login" className="text-xs font-bold uppercase px-4 py-2 hover:text-primary transition-all">
                                         Entrar
                                     </Link>
-                                    <Link href="/registro" className="text-xs font-bold uppercase bg-primary text-white px-4 py-2 rounded-full hover:shadow-lg hover:shadow-primary/30 transition-all">
+                                    <Link href="/registro" className="text-xs font-bold uppercase bg-accent text-white px-4 py-2 rounded-full hover:shadow-lg hover:shadow-accent/30 transition-all">
                                         Registrarse
                                     </Link>
                                 </div>

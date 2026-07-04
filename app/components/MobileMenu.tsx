@@ -82,7 +82,7 @@ export default function MobileMenu({ isLoggedIn }: { isLoggedIn: boolean }) {
                                     <Link href="/login" className="text-lg font-bold uppercase text-center border border-primary text-primary px-4 py-4 rounded-full hover:bg-primary hover:text-white transition-all">
                                         Entrar
                                     </Link>
-                                    <Link href="/registro" className="text-lg font-bold uppercase text-center bg-primary text-white px-4 py-4 rounded-full shadow-md transition-all">
+                                    <Link href="/registro" className="text-lg font-bold uppercase text-center bg-accent text-white px-4 py-4 rounded-full shadow-md transition-all">
                                         Registrarse
                                     </Link>
                                 </div>

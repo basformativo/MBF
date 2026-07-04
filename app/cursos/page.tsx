@@ -47,10 +47,12 @@ export default async function CursosPage() {
                                     </div>
 
                                     <div className="p-8">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <span className="text-xs font-mono text-gray-400 uppercase">{course.nivel}</span>
-                                            <span className="text-primary font-bold text-lg">
-                                                {course.moneda === 'USD' ? '$' : ''}{course.precio} {course.moneda !== 'USD' ? course.moneda : ''}
+                                        <div className="flex justify-between items-center mb-4">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-border-site text-text-site/60">
+                                                {course.nivel}
+                                            </span>
+                                            <span className="bg-accent/10 text-accent font-mono font-bold text-sm px-3 py-1 rounded-full">
+                                                {course.moneda === 'USD' ? 'US$' : '$'}{new Intl.NumberFormat('es-AR').format(course.precio)}
                                             </span>
                                         </div>
                                         <h3 className="text-2xl display-font text-text-site mb-3 group-hover:text-primary transition-colors">

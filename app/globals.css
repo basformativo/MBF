@@ -2,6 +2,7 @@
 
 @theme {
   --color-primary: #3341FF;
+  --color-accent: #E8590C;
 
   --color-bg-site: var(--bg-site);
   --color-surface-site: var(--surface-site);

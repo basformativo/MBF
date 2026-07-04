@@ -66,10 +66,9 @@ export default async function CourseDetailPage({
                                 Precio del Curso
                             </span>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-5xl display-font text-primary">
-                                    {course.moneda === 'USD' ? '$' : ''}{course.precio} {course.moneda !== 'USD' ? course.moneda : ''}
+                                <span className="bg-accent/10 text-accent font-mono font-bold text-3xl px-4 py-1 rounded-full">
+                                    {course.moneda === 'USD' ? 'US$' : '$'}{new Intl.NumberFormat('es-AR').format(course.precio)}
                                 </span>
-                                <span className="text-gray-400 line-through text-lg">$99.99</span>
                             </div>
                             <p className="text-xs text-gray-500 mt-2">Acceso de por vida • Soporte 24/7</p>
                         </div>
