@@ -15,12 +15,20 @@ export default async function CursosPage() {
             <main className="w-full bg-bg-site min-h-screen">
 
                 {/* Header Section */}
-                <section className="bg-surface-site py-20 border-b border-border-site">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <h1 className="text-6xl md:text-8xl display-font text-text-site mb-6">
+                <section className="relative overflow-hidden py-24 md:py-36 border-b border-border-site">
+                    <div className="absolute inset-0 z-0">
+                        <img
+                            src="/Fondo.png"
+                            alt=""
+                            className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/70"></div>
+                    </div>
+                    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <h1 className="text-6xl md:text-8xl display-font text-white mb-6">
                             NUESTROS<br />CURSOS
                         </h1>
-                        <p className="text-xl max-w-2xl text-text-site opacity-70">
+                        <p className="text-xl max-w-2xl text-white/80">
                             Formación especializada para entrenadores que buscan la excelencia. Explora nuestro catálogo y lleva tu carrera al siguiente nivel.
                         </p>
                     </div>
