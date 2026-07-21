@@ -16,9 +16,9 @@ const COMO_ENTERASTE = [
     'Google', 'Podcast', 'Otro',
 ];
 
-const CVU_MERCADOPAGO = '0000003100092415067264';
-const ALIAS_MERCADOPAGO = 'chapex.mp';
-const NOMBRE_MERCADOPAGO = 'Nicolás Daniel Boeri';
+const CVU_MERCADOPAGO = '0000013000032267823186';
+const ALIAS_MERCADOPAGO = 'Basketformativo.prex';
+const NOMBRE_MERCADOPAGO = 'Myriam Lopez';
 const PAYPAL_EMAIL = 'mmarcos0202@gmail.com';
 
 interface Props {
@@ -174,7 +174,7 @@ export default function CheckoutForm({ course, user }: Props) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                     <PaymentOption
                         id="mercadopago"
-                        label="Mercado Pago"
+                        label="PREX"
                         icon="💳"
                         selected={medioPago === 'mercadopago'}
                         onSelect={() => setMedioPago('mercadopago')}
@@ -192,7 +192,7 @@ export default function CheckoutForm({ course, user }: Props) {
                 {medioPago && (
                     <div className="bg-gray-50 dark:bg-black/20 rounded-2xl border border-border-light dark:border-border-dark p-6 space-y-4">
                         <h3 className="font-bold text-sm uppercase tracking-widest text-gray-500">
-                            {medioPago === 'mercadopago' ? 'Datos para transferencia — Mercado Pago' : 'Datos de pago — PayPal'}
+                            {medioPago === 'mercadopago' ? 'Datos para transferencia — PREX' : 'Datos de pago — PayPal'}
                         </h3>
 
                         {medioPago === 'mercadopago' ? (
