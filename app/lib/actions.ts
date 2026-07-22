@@ -250,6 +250,7 @@ export async function submitPurchaseAction(formData: FormData) {
             comprobante: comprobanteId,
             estado: 'pendiente',
             estado_pago: 'pendiente', // Para compatibilidad
+            fecha_compra: new Date().toISOString(),
         }));
 
         revalidatePath('/dashboard');

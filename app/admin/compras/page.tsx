@@ -203,8 +203,8 @@ function PurchaseCard({ solicitud: s, directusUrl }: { solicitud: any; directusU
         rechazado: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
     };
 
-    const fecha = s.date_created
-        ? new Date(s.date_created).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    const fecha = s.fecha_compra
+        ? new Date(s.fecha_compra).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         : '—';
 
     const redes = Array.isArray(s.redes_sociales) ? s.redes_sociales.join(', ') : (s.redes_sociales || '—');
