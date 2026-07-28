@@ -41,7 +41,11 @@ export default async function CursosPage() {
                             {courses.map((course) => {
                                 const mainCategory = course.categorias?.[0]?.categoria?.nombre || 'General';
                                 return (
-                                    <div key={course.id} className="group bg-surface-site rounded-2xl overflow-hidden border border-border-site hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                                    <Link
+                                        key={course.id}
+                                        href={`/cursos/${course.slug}`}
+                                        className="group block cursor-pointer bg-surface-site rounded-2xl overflow-hidden border border-border-site hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                                    >
                                         <div className="relative h-64 overflow-hidden bg-gray-200">
                                             <img
                                                 src={getImageUrl(course.Imagen_Portada)}
@@ -80,14 +84,11 @@ export default async function CursosPage() {
                                                 {course.descripcion_corta}
                                             </p>
 
-                                            <div className="flex items-center justify-between pt-6 border-t border-border-site">
-                                                <Link href={`/cursos/${course.slug}`} className="text-sm font-bold uppercase tracking-wide flex items-center hover:text-primary transition-colors">
-                                                    Ver Detalles
-                                                </Link>
-                                                <span className="material-icons text-gray-300 group-hover:text-primary transition-colors">arrow_forward</span>
+                                            <div className="flex items-center justify-end pt-6 border-t border-border-site">
+                                                <span className="material-icons text-gray-300 group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
                                             </div>
                                         </div>
-                                    </div>
+                                    </Link>
                                 );
                             })}
                         </div>
