@@ -48,10 +48,19 @@ export default async function CursosPage() {
                                                 alt={course.titulo}
                                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                             />
-                                            <div className="absolute top-4 left-4 z-20">
-                                                <span className="bg-surface-site text-text-site text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-border-site">
+                                            <div className="absolute inset-x-4 top-4 z-20 flex items-start justify-between gap-2">
+                                                <span className="bg-surface-site text-text-site text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-border-site truncate">
                                                     {mainCategory}
                                                 </span>
+                                                {course.disponible ? (
+                                                    <span className="shrink-0 whitespace-nowrap bg-green-500/15 text-green-600 dark:text-green-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-green-500/30 backdrop-blur-sm">
+                                                        Disponible
+                                                    </span>
+                                                ) : (
+                                                    <span className="shrink-0 whitespace-nowrap bg-red-500/15 text-red-600 dark:text-red-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-red-500/30 backdrop-blur-sm">
+                                                        No disponible
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
 

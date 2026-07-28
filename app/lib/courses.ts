@@ -66,6 +66,7 @@ export interface Course {
     Imagen_Portada: string; // Nombre exacto corregido
     estado: string;
     destacado: boolean;
+    disponible: boolean;
     categorias: { categoria: Categoria }[]; // M2M junction
     instructores: { instructor: Instructor }[]; // M2M junction
     clases: Clase[]; // Alias O2M
