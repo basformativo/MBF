@@ -37,7 +37,7 @@ export default async function CheckoutPage({
     try {
         courses = await adminClient.request(readItems('cursos', {
             filter: { id: { _eq: courseId } },
-            fields: ['id', 'titulo', 'precio', 'moneda', 'Imagen_Portada'],
+            fields: ['id', 'titulo', 'precio', 'moneda', 'Imagen_Portada', 'disponible', 'slug'],
             limit: 1,
         }));
     } catch {
@@ -52,6 +52,11 @@ export default async function CheckoutPage({
 
     if (access) {
         redirect('/dashboard');
+    }
+
+    // El curso fue marcado como no disponible por el administrador: no se permite iniciar la compra
+    if (course.disponible === false) {
+        redirect(`/cursos/${course.slug}`);
     }
 
     return (

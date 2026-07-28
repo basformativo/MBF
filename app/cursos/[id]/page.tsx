@@ -73,7 +73,7 @@ export default async function CourseDetailPage({
                             <p className="text-xs text-gray-500 mt-2">Acceso de por vida • Soporte 24/7</p>
                         </div>
                         <div className="flex flex-col items-center md:items-end">
-                            <EnrollButton courseId={course.id} />
+                            <EnrollButton courseId={course.id} disponible={course.disponible} />
                         </div>
                     </div>
                 </section>

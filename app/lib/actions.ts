@@ -207,6 +207,17 @@ export async function submitPurchaseAction(formData: FormData) {
     try {
         const user = await client.request(readMe());
 
+        const cursoId = formData.get('curso_id') as string;
+        const cursos = await adminClient.request(readItems('cursos', {
+            filter: { id: { _eq: cursoId } },
+            fields: ['disponible'],
+            limit: 1,
+        }));
+
+        if (!cursos?.[0] || cursos[0].disponible === false) {
+            return { error: 'Este curso no está disponible actualmente.' };
+        }
+
         // Subir el comprobante de pago a Directus Files
         const comprobanteFile = formData.get('comprobante') as File | null;
         let comprobanteId: string | null = null;
