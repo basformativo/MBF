@@ -4,6 +4,7 @@ import { logoutAction } from "../lib/actions";
 import { createDirectus, rest, staticToken, readMe } from "@directus/sdk";
 import MobileMenu from "./MobileMenu";
 import ThemeToggle from "./ThemeToggle";
+import { getCartCount } from "../lib/cart";
 
 const DIRECTUS_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://localhost:8055';
 const ADMIN_ROLE_ID_KNOWN = '583770fb-b647-4f1d-ade0-d0fb4851d559';
@@ -14,11 +15,13 @@ export default async function Header() {
     const isLoggedIn = !!token;
 
     let isAdmin = false;
+    let cartCount = 0;
     if (token) {
         try {
             const client = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(token));
-            const user = await client.request(readMe({ fields: ['role'] }));
+            const user = await client.request(readMe({ fields: ['id', 'role'] }));
             isAdmin = user.role === ADMIN_ROLE_ID_KNOWN;
+            cartCount = await getCartCount(user.id);
         } catch (e) {
             // No es admin o error de token
         }
@@ -56,6 +59,16 @@ export default async function Header() {
                         )}
                     </nav>
                     <div className="flex items-center">
+                        {isLoggedIn && (
+                            <Link href="/carrito" className="relative p-2 mr-2 text-text-site hover:text-primary transition-colors" aria-label="Carrito">
+                                <span className="material-icons text-2xl">shopping_cart</span>
+                                {cartCount > 0 && (
+                                    <span className="absolute top-0 right-0 bg-accent text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                                        {cartCount}
+                                    </span>
+                                )}
+                            </Link>
+                        )}
                         <div className="hidden lg:flex items-center space-x-4">
                             {isLoggedIn ? (
                                 <div className="flex items-center space-x-4">

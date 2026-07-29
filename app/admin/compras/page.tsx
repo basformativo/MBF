@@ -53,7 +53,7 @@ export default async function AdminComprasPage() {
             sort: ['-fecha_compra'],
             fields: [
                 'id', 'estado', 'estado_pago', 'fecha_compra',
-                'precio_pagado', 'moneda',
+                'precio_pagado', 'moneda', 'grupo_compra',
                 'nombre', 'apellido', 'email', 'dni',
                 'telefono', 'ciudad', 'pais',
                 'redes_sociales', 'como_enteraste', 'consultas',
@@ -233,6 +233,7 @@ function PurchaseCard({ solicitud: s, directusUrl }: { solicitud: any; directusU
                 <InfoRow label="Estado Pago" value={s.estado_pago} highlight={s.estado_pago === 'aprobado'} />
                 <InfoRow label="Redes" value={redes} />
                 <InfoRow label="Como se enteró" value={s.como_enteraste} />
+                {s.grupo_compra && <InfoRow label="Orden (carrito)" value={s.grupo_compra} />}
                 {s.consultas && <InfoRow label="Consultas" value={s.consultas} />}
                 {s.notas_admin && <InfoRow label="Notas admin" value={s.notas_admin} highlight />}
             </div>

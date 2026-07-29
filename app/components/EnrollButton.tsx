@@ -2,6 +2,8 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { createDirectus, rest, staticToken, readMe } from '@directus/sdk';
 import { getApprovedCourseAccess } from '../lib/courses';
+import { isCourseInCart } from '../lib/cart';
+import { addToCartAction } from '../lib/actions';
 
 interface Props {
     courseId: string;
@@ -42,6 +44,7 @@ export default async function EnrollButton({ courseId, disponible }: Props) {
 
     let hasAccess = false;
     let courseSlug = '';
+    let inCart = false;
 
     try {
         const user = await userClient.request(readMe());
@@ -50,6 +53,8 @@ export default async function EnrollButton({ courseId, disponible }: Props) {
         if (access) {
             hasAccess = true;
             courseSlug = access.curso?.slug || '';
+        } else {
+            inCart = await isCourseInCart(user.id, courseId);
         }
     } catch (e: unknown) {
         const message = e instanceof Error ? e.message : 'Error desconocido';
@@ -69,12 +74,30 @@ export default async function EnrollButton({ courseId, disponible }: Props) {
 
     if (!disponible) return <NoDisponibleButton />;
 
+    if (inCart) {
+        return (
+            <Link
+                href="/carrito"
+                className="bg-green-600 hover:bg-green-700 text-white px-10 py-5 rounded-full font-bold uppercase tracking-widest text-lg w-full md:w-auto shadow-lg transition-all inline-block text-center"
+            >
+                En el carrito - Ver carrito
+            </Link>
+        );
+    }
+
+    async function handleAddToCart() {
+        'use server';
+        await addToCartAction(courseId);
+    }
+
     return (
-        <Link
-            href={`/checkout/${courseId}`}
-            className="bg-accent hover:bg-accent/90 text-white px-10 py-5 rounded-full font-bold uppercase tracking-widest text-lg w-full md:w-auto shadow-lg transition-all inline-block text-center"
-        >
-            Comprar Curso
-        </Link>
+        <form action={handleAddToCart} className="w-full md:w-auto">
+            <button
+                type="submit"
+                className="bg-accent hover:bg-accent/90 text-white px-10 py-5 rounded-full font-bold uppercase tracking-widest text-lg w-full md:w-auto shadow-lg transition-all"
+            >
+                Comprar
+            </button>
+        </form>
     );
 }

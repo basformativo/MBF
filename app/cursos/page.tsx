@@ -1,13 +1,48 @@
 
+import { cookies } from "next/headers";
+import { createDirectus, rest, staticToken, readMe } from "@directus/sdk";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Link from "next/link";
-import { getCourses, getImageUrl } from "../lib/courses";
+import CartIconButton, { CartIconState } from "../components/CartIconButton";
+import { getCourses, getUserCourses, getImageUrl } from "../lib/courses";
+import { getCartCourseIds } from "../lib/cart";
 
 export const dynamic = 'force-dynamic'; // Ensure fresh data
 
+const DIRECTUS_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://localhost:8055';
+
 export default async function CursosPage() {
     const courses = await getCourses();
+
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_session')?.value;
+
+    let cartCourseIds = new Set<string>();
+    let ownedCourseIds = new Set<string>();
+
+    if (token) {
+        try {
+            const userClient = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(token));
+            const user = await userClient.request(readMe());
+            const [cartIds, ownedCourses] = await Promise.all([
+                getCartCourseIds(user.id),
+                getUserCourses(user.id),
+            ]);
+            cartCourseIds = cartIds;
+            ownedCourseIds = new Set(ownedCourses.map((c) => c.id));
+        } catch (e) {
+            // Token inválido o expirado: se trata como invitado
+        }
+    }
+
+    function getCartIconState(course: { id: string; disponible: boolean }): CartIconState {
+        if (!token) return 'guest';
+        if (ownedCourseIds.has(course.id)) return 'owned';
+        if (cartCourseIds.has(course.id)) return 'in_cart';
+        if (course.disponible === false) return 'unavailable';
+        return 'add';
+    }
 
     return (
         <>
@@ -73,9 +108,12 @@ export default async function CursosPage() {
                                                 <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-border-site text-text-site/60">
                                                     {course.nivel}
                                                 </span>
-                                                <span className="bg-accent/10 text-accent font-mono font-bold text-sm px-3 py-1 rounded-full">
-                                                    {course.moneda === 'USD' ? 'US$' : '$'}{new Intl.NumberFormat('es-AR').format(course.precio)}
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="bg-accent/10 text-accent font-mono font-bold text-sm px-3 py-1 rounded-full">
+                                                        {course.moneda === 'USD' ? 'US$' : '$'}{new Intl.NumberFormat('es-AR').format(course.precio)}
+                                                    </span>
+                                                    <CartIconButton courseId={course.id} state={getCartIconState(course)} />
+                                                </div>
                                             </div>
                                             <h3 className="text-2xl display-font text-text-site mb-3 group-hover:text-primary transition-colors">
                                                 {course.titulo}

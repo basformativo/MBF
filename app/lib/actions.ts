@@ -3,10 +3,13 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { createDirectus, rest, createUser, staticToken, createItem, updateItem, readItems, readMe } from '@directus/sdk';
+import { randomUUID } from 'crypto';
+import { createDirectus, rest, createUser, staticToken, createItem, updateItem, deleteItem, deleteItems, readItems, readMe } from '@directus/sdk';
 import { redirect } from 'next/navigation';
 
 import { adminClient, DIRECTUS_URL, ADMIN_TOKEN } from './directus';
+import { getApprovedCourseAccess } from './courses';
+import { getCartItems, isCourseInCart } from './cart';
 
 const ALUMNO_ROLE_ID = 'c6d89d18-ac96-4281-8567-f88e36838980';
 
@@ -269,6 +272,179 @@ export async function submitPurchaseAction(formData: FormData) {
         return { success: true };
     } catch (e: any) {
         console.error('Error al guardar solicitud de compra:', e);
+        return { error: 'Error al enviar la solicitud. Intentá de nuevo.' };
+    }
+}
+
+// ─── CARRITO ──────────────────────────────────────────────────────────────────
+
+async function uploadComprobante(file: File | null): Promise<{ id: string | null; error?: string }> {
+    if (!file || file.size === 0) return { id: null };
+
+    const fileForm = new FormData();
+    fileForm.append('file', file, file.name);
+
+    const uploadRes = await fetch(`${DIRECTUS_URL}/files`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${ADMIN_TOKEN}` },
+        body: fileForm,
+    });
+    const uploadData = await uploadRes.json();
+    if (!uploadRes.ok) {
+        console.error('Error subiendo comprobante:', uploadData);
+        return { id: null, error: 'Error al subir el comprobante. Intentá de nuevo.' };
+    }
+    return { id: uploadData.data?.id ?? null };
+}
+
+export async function addToCartAction(courseId: string) {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_session')?.value;
+    if (!token) return { error: 'Debes iniciar sesión para comprar' };
+
+    const client = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(token));
+
+    try {
+        const user = await client.request(readMe());
+
+        const cursos = await adminClient.request(readItems('cursos', {
+            filter: { id: { _eq: courseId } },
+            fields: ['disponible'],
+            limit: 1,
+        }));
+
+        if (!cursos?.[0] || cursos[0].disponible === false) {
+            return { error: 'Este curso no está disponible actualmente.' };
+        }
+
+        const access = await getApprovedCourseAccess(user.id, courseId);
+        if (access) {
+            return { error: 'Ya tenés acceso a este curso.' };
+        }
+
+        const alreadyInCart = await isCourseInCart(user.id, courseId);
+        if (alreadyInCart) {
+            return { success: true };
+        }
+
+        await adminClient.request(createItem('carrito_items' as any, {
+            usuario: user.id,
+            curso: courseId,
+            fecha_agregado: new Date().toISOString(),
+        }));
+
+        revalidatePath('/cursos');
+        revalidatePath('/carrito');
+        revalidatePath('/', 'layout');
+        return { success: true };
+    } catch (e: any) {
+        console.error('Error agregando al carrito:', e);
+        return { error: 'Error al agregar el curso al carrito. Intentá de nuevo.' };
+    }
+}
+
+export async function removeFromCartAction(cartItemId: string) {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_session')?.value;
+    if (!token) return { error: 'Debes iniciar sesión' };
+
+    const client = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(token));
+
+    try {
+        const user = await client.request(readMe());
+
+        const items = await adminClient.request(readItems('carrito_items' as any, {
+            filter: { id: { _eq: cartItemId } },
+            fields: ['id', 'usuario'],
+            limit: 1,
+        }));
+
+        const item = items?.[0];
+        if (!item || item.usuario !== user.id) {
+            return { error: 'No se encontró el item en tu carrito.' };
+        }
+
+        await adminClient.request(deleteItem('carrito_items' as any, cartItemId));
+
+        revalidatePath('/carrito');
+        revalidatePath('/', 'layout');
+        return { success: true };
+    } catch (e: any) {
+        console.error('Error quitando del carrito:', e);
+        return { error: 'Error al quitar el curso del carrito. Intentá de nuevo.' };
+    }
+}
+
+export async function submitCartCheckoutAction(formData: FormData) {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_session')?.value;
+    if (!token) return { error: 'Debes iniciar sesión para comprar' };
+
+    const client = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(token));
+
+    try {
+        const user = await client.request(readMe());
+
+        const cartItems = await getCartItems(user.id);
+        if (cartItems.length === 0) {
+            return { error: 'Tu carrito está vacío.' };
+        }
+
+        const noDisponible = cartItems.find(item => item.curso?.disponible === false);
+        if (noDisponible) {
+            return { error: `El curso "${noDisponible.curso.titulo}" ya no está disponible. Quitalo del carrito para continuar.` };
+        }
+
+        const comprobanteFile = formData.get('comprobante') as File | null;
+        const { id: comprobanteId, error: uploadError } = await uploadComprobante(comprobanteFile);
+        if (uploadError) return { error: uploadError };
+
+        const redesRaw = formData.get('redes_sociales') as string;
+        const redes = redesRaw ? JSON.parse(redesRaw) : [];
+
+        const grupoCompra = randomUUID();
+        const datosComunes = {
+            usuario: user.id,
+            nombre: formData.get('nombre') as string,
+            apellido: formData.get('apellido') as string,
+            email: formData.get('email') as string,
+            dni: formData.get('dni') as string,
+            fecha_nacimiento: formData.get('fecha_nacimiento') as string || null,
+            telefono: formData.get('telefono') as string,
+            ciudad: formData.get('ciudad') as string,
+            pais: formData.get('pais') as string,
+            redes_sociales: redes,
+            como_enteraste: formData.get('como_enteraste') as string,
+            consultas: formData.get('consultas') as string,
+            medio_pago: formData.get('medio_pago') as string,
+            metodo_pago: formData.get('medio_pago') as string,
+            comprobante: comprobanteId,
+            estado: 'pendiente',
+            estado_pago: 'pendiente',
+            fecha_compra: new Date().toISOString(),
+            grupo_compra: grupoCompra,
+        };
+
+        for (const item of cartItems) {
+            await adminClient.request(createItem('compras' as any, {
+                ...datosComunes,
+                curso: item.curso.id,
+                precio_pagado: item.curso.precio,
+                moneda: item.curso.moneda,
+            }));
+        }
+
+        await adminClient.request(deleteItems('carrito_items' as any, {
+            filter: { usuario: { _eq: user.id } }
+        }));
+
+        revalidatePath('/dashboard');
+        revalidatePath('/admin/compras');
+        revalidatePath('/carrito');
+        revalidatePath('/', 'layout');
+        return { success: true };
+    } catch (e: any) {
+        console.error('Error al guardar solicitud de compra del carrito:', e);
         return { error: 'Error al enviar la solicitud. Intentá de nuevo.' };
     }
 }

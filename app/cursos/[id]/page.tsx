@@ -1,13 +1,18 @@
 
 import sanitizeHtml from "sanitize-html";
+import { cookies } from "next/headers";
+import { createDirectus, rest, staticToken, readMe } from "@directus/sdk";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import Link from "next/link";
-import { getCourseBySlug, getImageUrl } from "../../lib/courses";
+import { getCourseBySlug, getApprovedCourseAccess, getImageUrl } from "../../lib/courses";
+import { isCourseInCart } from "../../lib/cart";
 import { notFound } from "next/navigation";
 import EnrollButton from "../../components/EnrollButton";
+import CartIconButton, { CartIconState } from "../../components/CartIconButton";
 
 export const dynamic = 'force-dynamic';
+const DIRECTUS_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://localhost:8055';
 
 export default async function CourseDetailPage({
     params,
@@ -24,6 +29,31 @@ export default async function CourseDetailPage({
 
     const firstInstructor = course.instructores?.[0]?.instructor;
     const allCategories = course.categorias?.map(c => c.categoria.nombre).join(', ') || 'Sin categoría';
+
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_session')?.value;
+
+    let cartIconState: CartIconState = 'guest';
+    if (token) {
+        try {
+            const userClient = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(token));
+            const user = await userClient.request(readMe());
+            const access = await getApprovedCourseAccess(user.id, course.id);
+            if (access) {
+                cartIconState = 'owned';
+            } else if (await isCourseInCart(user.id, course.id)) {
+                cartIconState = 'in_cart';
+            } else if (course.disponible === false) {
+                cartIconState = 'unavailable';
+            } else {
+                cartIconState = 'add';
+            }
+        } catch (e) {
+            cartIconState = 'guest';
+        }
+    } else if (course.disponible === false) {
+        cartIconState = 'unavailable';
+    }
 
     return (
         <>
@@ -69,6 +99,7 @@ export default async function CourseDetailPage({
                                 <span className="bg-accent/10 text-accent font-mono font-bold text-3xl px-4 py-1 rounded-full">
                                     {course.moneda === 'USD' ? 'US$' : '$'}{new Intl.NumberFormat('es-AR').format(course.precio)}
                                 </span>
+                                <CartIconButton courseId={course.id} state={cartIconState} />
                             </div>
                             <p className="text-xs text-gray-500 mt-2">Acceso de por vida • Soporte 24/7</p>
                         </div>
