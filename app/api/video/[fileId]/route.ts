@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createDirectus, rest, staticToken, readMe, readItems } from '@directus/sdk';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { DIRECTUS_URL, adminClient } from '../../../lib/directus';
 import { getApprovedCourseAccess } from '../../../lib/courses';
+import { r2Client, R2_BUCKET_NAME } from '../../../lib/r2';
 
-const ADMIN_TOKEN = process.env.DIRECTUS_ADMIN_TOKEN;
+export const dynamic = 'force-dynamic';
 
 export async function GET(
     request: NextRequest,
@@ -52,9 +55,6 @@ export async function GET(
     const range = request.headers.get('range');
 
     const fetchHeaders: HeadersInit = {};
-    if (ADMIN_TOKEN) {
-        fetchHeaders['Authorization'] = `Bearer ${ADMIN_TOKEN}`;
-    }
     // Reenviar Range para soporte de seeking / reproducción parcial
     if (range) {
         fetchHeaders['Range'] = range;
@@ -62,11 +62,14 @@ export async function GET(
 
     let upstream: Response;
     try {
-        upstream = await fetch(`${DIRECTUS_URL}/assets/${fileId}`, {
-            headers: fetchHeaders,
-        });
+        const signedUrl = await getSignedUrl(
+            r2Client,
+            new GetObjectCommand({ Bucket: R2_BUCKET_NAME, Key: `${fileId}.mp4` }),
+            { expiresIn: 300 }
+        );
+        upstream = await fetch(signedUrl, { headers: fetchHeaders, cache: 'no-store' });
     } catch (err) {
-        console.error('[VideoProxy] Error al conectar con Directus:', err);
+        console.error('[VideoProxy] Error al conectar con R2:', err);
         return new NextResponse('Error al obtener el video', { status: 502 });
     }
 

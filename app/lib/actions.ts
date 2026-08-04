@@ -10,6 +10,7 @@ import { redirect } from 'next/navigation';
 import { adminClient, DIRECTUS_URL, ADMIN_TOKEN } from './directus';
 import { getApprovedCourseAccess } from './courses';
 import { getCartItems, isCourseInCart } from './cart';
+import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, REFRESH_TOKEN_MAX_AGE } from './auth-constants';
 
 const ALUMNO_ROLE_ID = 'c6d89d18-ac96-4281-8567-f88e36838980';
 
@@ -66,12 +67,21 @@ export async function loginAction(formData?: FormData) {
         const data = await response.json();
 
         if (data.data && data.data.access_token) {
-            cookieStore.set('auth_session', data.data.access_token, {
+            cookieStore.set(ACCESS_TOKEN_COOKIE, data.data.access_token, {
                 path: '/',
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 maxAge: data.data.expires / 1000
             });
+
+            if (data.data.refresh_token) {
+                cookieStore.set(REFRESH_TOKEN_COOKIE, data.data.refresh_token, {
+                    path: '/',
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    maxAge: REFRESH_TOKEN_MAX_AGE
+                });
+            }
 
             // Verificar si es admin para redirección, consultando el rol real en Directus
             let isAdmin = false;
@@ -101,7 +111,22 @@ export async function loginAction(formData?: FormData) {
 
 export async function logoutAction() {
     const cookieStore = await cookies();
-    cookieStore.delete('auth_session');
+    const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
+
+    if (refreshToken) {
+        try {
+            await fetch(`${DIRECTUS_URL}/auth/logout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh_token: refreshToken, mode: 'json' })
+            });
+        } catch (e) {
+            console.error('Error invalidando refresh token en Directus:', e);
+        }
+    }
+
+    cookieStore.delete(ACCESS_TOKEN_COOKIE);
+    cookieStore.delete(REFRESH_TOKEN_COOKIE);
     revalidatePath('/');
     redirect('/');
 }
