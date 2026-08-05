@@ -60,13 +60,18 @@ export default function CartCheckoutForm({ items, user }: Props) {
         fd.set('medio_pago', medioPago);
         fd.set('comprobante', comprobante);
 
-        const result = await submitCartCheckoutAction(fd);
+        try {
+            const result = await submitCartCheckoutAction(fd);
 
-        if (result?.error) {
-            setError(result.error);
+            if (result?.error) {
+                setError(result.error);
+                setIsLoading(false);
+            } else {
+                setStep('ok');
+            }
+        } catch {
+            setError('Error al enviar la solicitud. Verificá tu conexión o probá con un archivo más liviano.');
             setIsLoading(false);
-        } else {
-            setStep('ok');
         }
     }
 

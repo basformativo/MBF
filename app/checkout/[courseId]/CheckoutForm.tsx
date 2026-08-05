@@ -57,13 +57,18 @@ export default function CheckoutForm({ course, user }: Props) {
         fd.set('comprobante', comprobante);
         fd.set('curso_id', course.id);
 
-        const result = await submitPurchaseAction(fd);
+        try {
+            const result = await submitPurchaseAction(fd);
 
-        if (result?.error) {
-            setError(result.error);
+            if (result?.error) {
+                setError(result.error);
+                setIsLoading(false);
+            } else {
+                setStep('ok');
+            }
+        } catch {
+            setError('Error al enviar la solicitud. Verificá tu conexión o probá con un archivo más liviano.');
             setIsLoading(false);
-        } else {
-            setStep('ok');
         }
     }
 
