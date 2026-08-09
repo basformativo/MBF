@@ -100,5 +100,6 @@ export const config = {
         '/checkout/:path*',
         '/admin/:path*',
         '/api/video/:path*',
+        '/api/admin/:path*',
     ],
 };

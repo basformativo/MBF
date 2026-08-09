@@ -1,14 +1,12 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { createDirectus, rest, staticToken, readMe, readItems } from '@directus/sdk';
+import { readItems } from '@directus/sdk';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import PurchaseActions from './PurchaseActions';
-
-const DIRECTUS_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://localhost:8055';
-const ADMIN_TOKEN = process.env.DIRECTUS_ADMIN_TOKEN || '';
-const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID || '';
+import { getAdminUser } from '../../lib/adminAuth';
+import { adminClient, DIRECTUS_URL } from '../../lib/directus';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,35 +15,8 @@ export default async function AdminComprasPage() {
     const token = cookieStore.get('auth_session')?.value;
     if (!token) redirect('/login');
 
-    // Verificar que sea admin
-    const userClient = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(token));
-    let user: any;
-    try {
-        user = await userClient.request(readMe({ fields: ['id', 'role', 'first_name'] }));
-    } catch {
-        redirect('/login');
-    }
-
-    const adminClient = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(ADMIN_TOKEN));
-
-    // Verificar rol admin consultando el rol real en Directus
-    let isAdmin = false;
-    try {
-        const roles = await adminClient.request(
-            readItems('directus_roles' as any, {
-                filter: { id: { _eq: user.role } },
-                fields: ['admin_access'],
-                limit: 1,
-            })
-        );
-        isAdmin = (roles as any[])[0]?.admin_access === true;
-    } catch {
-        // Si falla la consulta dinámica, no se concede acceso de administrador
-    }
-
-    if (!isAdmin) {
-        redirect('/dashboard');
-    }
+    const user = await getAdminUser(token);
+    if (!user) redirect('/dashboard');
 
     // Obtener todas las solicitudes
     const solicitudes = await adminClient.request(
@@ -161,8 +132,18 @@ export default async function AdminComprasPage() {
                                         </div>
                                         <span className="material-icons text-xs text-gray-400 group-hover:translate-x-1 transition-transform">open_in_new</span>
                                     </a>
-                                    <Link 
-                                        href="/cursos" 
+                                    <Link
+                                        href="/admin/videos"
+                                        className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-black/20 hover:bg-primary/5 transition-colors group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="material-icons text-primary text-sm">upload</span>
+                                            <span className="text-sm font-semibold">Subir Video</span>
+                                        </div>
+                                        <span className="material-icons text-xs text-gray-400 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                                    </Link>
+                                    <Link
+                                        href="/cursos"
                                         className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-black/20 hover:bg-primary/5 transition-colors group"
                                     >
                                         <div className="flex items-center gap-3">
