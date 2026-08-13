@@ -2,17 +2,22 @@
 
 import { useMemo, useState } from 'react';
 import type { CursoConClases } from './page';
+import { extractYouTubeVideoId } from '../../lib/youtube';
+import YouTubeEmbed from '../../components/YouTubeEmbed';
 
 const PART_SIZE = 25 * 1024 * 1024; // 25MB por parte
 const MAX_PART_ATTEMPTS = 3;
 
 type Phase = 'idle' | 'uploading' | 'finishing' | 'done' | 'error';
+type Mode = 'r2' | 'youtube';
 
 export default function VideoUploadForm({ cursos }: { cursos: CursoConClases[] }) {
+    const [mode, setMode] = useState<Mode>('r2');
     const [cursoId, setCursoId] = useState('');
     const [claseId, setClaseId] = useState('');
     const [title, setTitle] = useState('');
     const [file, setFile] = useState<File | null>(null);
+    const [youtubeUrl, setYoutubeUrl] = useState('');
 
     const [phase, setPhase] = useState<Phase>('idle');
     const [progress, setProgress] = useState(0);
@@ -25,6 +30,14 @@ export default function VideoUploadForm({ cursos }: { cursos: CursoConClases[] }
         [cursos, cursoId]
     );
     const claseSeleccionada = clasesDelCurso.find(c => c.id === claseId);
+    const youtubeVideoId = useMemo(() => extractYouTubeVideoId(youtubeUrl), [youtubeUrl]);
+
+    function handleModeChange(m: Mode) {
+        setMode(m);
+        setPhase('idle');
+        setError(null);
+        setResultFileId(null);
+    }
 
     function handleFileChange(f: File | null) {
         setFile(f);
@@ -134,11 +147,40 @@ export default function VideoUploadForm({ cursos }: { cursos: CursoConClases[] }
         }
     }
 
+    async function handleLinkYoutube() {
+        if (!claseId || !youtubeVideoId) {
+            setError('Elegí una clase y pegá una URL de YouTube válida.');
+            return;
+        }
+
+        setError(null);
+        setPhase('uploading');
+        setStatusText('Guardando en Directus...');
+
+        try {
+            const res = await fetch('/api/admin/videos/link-youtube', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ claseId, videoUrl: youtubeUrl.trim() }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'No se pudo vincular el video');
+
+            setPhase('done');
+            setStatusText('Video de YouTube vinculado a la clase correctamente.');
+        } catch (e) {
+            console.error('[VideoUploadForm] Error vinculando YouTube:', e);
+            setError(e instanceof Error ? e.message : 'Error inesperado vinculando el video');
+            setPhase('error');
+        }
+    }
+
     function handleReset() {
         setCursoId('');
         setClaseId('');
         setTitle('');
         setFile(null);
+        setYoutubeUrl('');
         setPhase('idle');
         setProgress(0);
         setStatusText('');
@@ -150,11 +192,30 @@ export default function VideoUploadForm({ cursos }: { cursos: CursoConClases[] }
 
     return (
         <div className="bg-white dark:bg-surface-dark p-6 rounded-3xl border border-border-light dark:border-border-dark shadow-sm space-y-5">
+            <div className="flex gap-2 p-1 bg-gray-100 dark:bg-black/20 rounded-full">
+                <button
+                    type="button"
+                    onClick={() => handleModeChange('r2')}
+                    disabled={isUploading}
+                    className={`flex-1 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${mode === 'r2' ? 'bg-primary text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                >
+                    Subir a R2
+                </button>
+                <button
+                    type="button"
+                    onClick={() => handleModeChange('youtube')}
+                    disabled={isUploading}
+                    className={`flex-1 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${mode === 'youtube' ? 'bg-primary text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                >
+                    Vincular YouTube
+                </button>
+            </div>
+
             {phase === 'done' ? (
                 <div className="text-center py-6 space-y-3">
                     <p className="text-4xl">✅</p>
                     <p className="font-bold text-lg">{statusText}</p>
-                    {!claseId && (
+                    {mode === 'r2' && !claseId && (
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                             ID del archivo: <span className="font-mono">{resultFileId}</span> — pegalo en el campo &quot;Video&quot; de la clase en Directus.
                         </p>
@@ -163,7 +224,7 @@ export default function VideoUploadForm({ cursos }: { cursos: CursoConClases[] }
                         onClick={handleReset}
                         className="mt-2 bg-primary hover:opacity-90 text-white px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wider transition-all"
                     >
-                        Subir otro video
+                        Cargar otro video
                     </button>
                 </div>
             ) : (
@@ -177,7 +238,7 @@ export default function VideoUploadForm({ cursos }: { cursos: CursoConClases[] }
                                 disabled={isUploading}
                                 className="w-full bg-gray-50 dark:bg-black/20 border border-border-light dark:border-border-dark rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
                             >
-                                <option value="">Sin asignar (subir solamente)</option>
+                                <option value="">{mode === 'r2' ? 'Sin asignar (subir solamente)' : 'Elegir curso...'}</option>
                                 {cursos.map(c => (
                                     <option key={c.id} value={c.id}>{c.titulo}</option>
                                 ))}
@@ -195,68 +256,113 @@ export default function VideoUploadForm({ cursos }: { cursos: CursoConClases[] }
                                 <option value="">Elegir clase...</option>
                                 {clasesDelCurso.map(cl => (
                                     <option key={cl.id} value={cl.id}>
-                                        {cl.titulo}{cl.Video ? ' (ya tiene video)' : ''}
+                                        {cl.titulo}{cl.Video ? ' (ya tiene video R2)' : ''}{cl.video_url ? ' (ya tiene YouTube)' : ''}
                                     </option>
                                 ))}
                             </select>
                         </div>
                     </div>
 
-                    {claseSeleccionada?.Video && (
-                        <p className="text-xs text-yellow-600 dark:text-yellow-400 font-semibold">
-                            ⚠️ Esta clase ya tiene un video cargado. Si continuás, se reemplaza por el nuevo.
-                        </p>
-                    )}
+                    {mode === 'r2' ? (
+                        <>
+                            {claseSeleccionada?.Video && (
+                                <p className="text-xs text-yellow-600 dark:text-yellow-400 font-semibold">
+                                    ⚠️ Esta clase ya tiene un video en R2. Si continuás, se reemplaza por el nuevo.
+                                </p>
+                            )}
 
-                    <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Título del video</label>
-                        <input
-                            type="text"
-                            value={title}
-                            onChange={e => setTitle(e.target.value)}
-                            disabled={isUploading}
-                            placeholder="Ej: Fundamentos de tiro - Clase 1"
-                            className="w-full bg-gray-50 dark:bg-black/20 border border-border-light dark:border-border-dark rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Archivo de video</label>
-                        <input
-                            type="file"
-                            accept="video/*"
-                            disabled={isUploading}
-                            onChange={e => handleFileChange(e.target.files?.[0] ?? null)}
-                            className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-bold file:uppercase file:tracking-wider file:text-xs file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                        />
-                        {file && (
-                            <p className="text-xs text-gray-400 mt-1">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
-                        )}
-                    </div>
-
-                    {isUploading && (
-                        <div className="space-y-2">
-                            <div className="w-full h-3 bg-gray-100 dark:bg-black/30 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-primary transition-all duration-300"
-                                    style={{ width: `${progress}%` }}
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Título del video</label>
+                                <input
+                                    type="text"
+                                    value={title}
+                                    onChange={e => setTitle(e.target.value)}
+                                    disabled={isUploading}
+                                    placeholder="Ej: Fundamentos de tiro - Clase 1"
+                                    className="w-full bg-gray-50 dark:bg-black/20 border border-border-light dark:border-border-dark rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
                                 />
                             </div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{statusText}</p>
-                        </div>
-                    )}
 
-                    {error && (
-                        <p className="text-red-500 text-sm font-medium">{error}</p>
-                    )}
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Archivo de video</label>
+                                <input
+                                    type="file"
+                                    accept="video/*"
+                                    disabled={isUploading}
+                                    onChange={e => handleFileChange(e.target.files?.[0] ?? null)}
+                                    className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-bold file:uppercase file:tracking-wider file:text-xs file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                                />
+                                {file && (
+                                    <p className="text-xs text-gray-400 mt-1">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                                )}
+                            </div>
 
-                    <button
-                        onClick={handleUpload}
-                        disabled={isUploading || !file || !title.trim()}
-                        className="w-full bg-primary hover:opacity-90 text-white px-5 py-3 rounded-full font-bold text-sm uppercase tracking-wider transition-all disabled:opacity-50"
-                    >
-                        {isUploading ? statusText || 'Subiendo...' : 'Subir video'}
-                    </button>
+                            {isUploading && (
+                                <div className="space-y-2">
+                                    <div className="w-full h-3 bg-gray-100 dark:bg-black/30 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-primary transition-all duration-300"
+                                            style={{ width: `${progress}%` }}
+                                        />
+                                    </div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{statusText}</p>
+                                </div>
+                            )}
+
+                            {error && (
+                                <p className="text-red-500 text-sm font-medium">{error}</p>
+                            )}
+
+                            <button
+                                onClick={handleUpload}
+                                disabled={isUploading || !file || !title.trim()}
+                                className="w-full bg-primary hover:opacity-90 text-white px-5 py-3 rounded-full font-bold text-sm uppercase tracking-wider transition-all disabled:opacity-50"
+                            >
+                                {isUploading ? statusText || 'Subiendo...' : 'Subir video'}
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            {claseSeleccionada?.video_url && (
+                                <p className="text-xs text-yellow-600 dark:text-yellow-400 font-semibold">
+                                    ⚠️ Esta clase ya tiene un video de YouTube vinculado. Si continuás, se reemplaza por el nuevo.
+                                </p>
+                            )}
+
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Link de YouTube</label>
+                                <input
+                                    type="text"
+                                    value={youtubeUrl}
+                                    onChange={e => setYoutubeUrl(e.target.value)}
+                                    disabled={isUploading}
+                                    placeholder="https://www.youtube.com/watch?v=..."
+                                    className="w-full bg-gray-50 dark:bg-black/20 border border-border-light dark:border-border-dark rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                                />
+                                {youtubeUrl.trim() && !youtubeVideoId && (
+                                    <p className="text-xs text-red-500 mt-1">No pudimos reconocer un video de YouTube en esa URL.</p>
+                                )}
+                            </div>
+
+                            {youtubeVideoId && (
+                                <div className="rounded-2xl overflow-hidden border border-border-light dark:border-border-dark">
+                                    <YouTubeEmbed url={youtubeUrl} title="Vista previa" />
+                                </div>
+                            )}
+
+                            {error && (
+                                <p className="text-red-500 text-sm font-medium">{error}</p>
+                            )}
+
+                            <button
+                                onClick={handleLinkYoutube}
+                                disabled={isUploading || !claseId || !youtubeVideoId}
+                                className="w-full bg-primary hover:opacity-90 text-white px-5 py-3 rounded-full font-bold text-sm uppercase tracking-wider transition-all disabled:opacity-50"
+                            >
+                                {isUploading ? statusText || 'Guardando...' : 'Vincular video'}
+                            </button>
+                        </>
+                    )}
                 </>
             )}
         </div>

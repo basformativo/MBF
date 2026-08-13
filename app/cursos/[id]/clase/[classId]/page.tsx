@@ -1,13 +1,14 @@
 
 import Header from "../../../../components/Header";
 import Footer from "../../../../components/Footer";
-import { getCourseBySlug, getImageUrl, getCourseProgress, getComments, getApprovedCourseAccess } from "../../../../lib/courses";
+import { getCourseBySlug, getImageUrl, getCourseProgress, getComments, getApprovedCourseAccess, getClaseVideoFields } from "../../../../lib/courses";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { toggleProgressAction } from "../../../../lib/actions";
 import { createDirectus, rest, staticToken, readMe } from "@directus/sdk";
 import CommentSection from "../../../../components/CommentSection";
+import YouTubeEmbed from "../../../../components/YouTubeEmbed";
 
 export const dynamic = 'force-dynamic';
 
@@ -59,6 +60,16 @@ export default async function ClasePage({
     const canAccess = currentClass.es_gratis ? isLoggedIn : (isLoggedIn && hasAccess);
     const isCompleted = completedClasses.includes(currentClass.id);
 
+    // El video_url solo se pide a Directus si el usuario tiene acceso: así la
+    // URL de YouTube nunca se incluye en la respuesta del servidor para alguien
+    // sin acceso. La reproducción es únicamente por YouTube — el campo "Video"
+    // (archivo en R2) ya no se lee ni se muestra en esta página.
+    let videoUrl: string | null = null;
+    if (canAccess) {
+        const videoFields = await getClaseVideoFields(currentClass.id);
+        videoUrl = videoFields?.video_url || null;
+    }
+
     // Cargar comentarios
     const comments = await getComments(currentClass.id);
 
@@ -86,25 +97,8 @@ export default async function ClasePage({
                             <div className="aspect-video bg-black rounded-3xl overflow-hidden relative shadow-2xl border border-white/10">
                                 {canAccess ? (
                                     <div className="w-full h-full">
-                                        {currentClass.Video ? (
-                                            <video
-                                                controls
-                                                className="w-full h-full object-contain"
-                                                poster={getImageUrl(course.Imagen_Portada)}
-                                                playsInline
-                                                preload="metadata"
-                                            >
-                                                {/* Proxy que re-sirve el archivo (incluso .MOV) como video/mp4
-                                                    para compatibilidad con Chrome, Firefox y Android */}
-                                                <source src={`/api/video/${currentClass.Video}`} type="video/mp4" />
-                                            </video>
-                                        ) : currentClass.video_url ? (
-                                            <iframe
-                                                src={currentClass.video_url.replace('watch?v=', 'embed/')}
-                                                className="absolute inset-0 w-full h-full"
-                                                allow="autoplay; fullscreen; picture-in-picture"
-                                                allowFullScreen
-                                            />
+                                        {videoUrl ? (
+                                            <YouTubeEmbed url={videoUrl} title={currentClass.titulo} />
                                         ) : (
                                             <div className="w-full h-full flex flex-col items-center justify-center text-white bg-surface-dark/50">
                                                 <span className="material-icons text-8xl mb-4 text-gray-600">videocam_off</span>

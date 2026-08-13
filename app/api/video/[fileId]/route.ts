@@ -5,8 +5,24 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { DIRECTUS_URL, adminClient } from '../../../lib/directus';
 import { getApprovedCourseAccess } from '../../../lib/courses';
 import { r2Client, R2_BUCKET_NAME } from '../../../lib/r2';
+import { TTLCache } from '../../../lib/ttlCache';
 
 export const dynamic = 'force-dynamic';
+
+interface ClaseInfo {
+    id: string;
+    curso: string;
+    es_gratis: boolean;
+}
+
+// Un reproductor de video pide muchos rangos de bytes por reproducción (buffering,
+// seeking). Sin esta caché, cada uno de esos pedidos repetía 3 round-trips a
+// Directus (encontrar la clase, validar la sesión, chequear la compra) antes de
+// tocar R2 — eso es lo que se sentía como "lento". El proceso corre standalone
+// en Docker (no serverless), así que una caché en memoria con TTL corto es válida.
+const claseByFileIdCache = new TTLCache<string, ClaseInfo | null>(10 * 60 * 1000);
+const userIdBySessionCache = new TTLCache<string, string>(5 * 60 * 1000);
+const accessCache = new TTLCache<string, boolean>(2 * 60 * 1000);
 
 export async function GET(
     request: NextRequest,
@@ -19,12 +35,19 @@ export async function GET(
     }
 
     // Buscar a qué clase/curso pertenece este archivo para poder verificar acceso
-    const clases = await adminClient.request(readItems('clases', {
-        filter: { Video: { _eq: fileId } },
-        fields: ['id', 'curso', 'es_gratis'] as any,
-        limit: 1,
-    }));
-    const clase = (clases as any[])[0];
+    let clase: ClaseInfo | null;
+    const cachedClase = claseByFileIdCache.get(fileId);
+    if (cachedClase !== undefined) {
+        clase = cachedClase;
+    } else {
+        const clases = await adminClient.request(readItems('clases', {
+            filter: { Video: { _eq: fileId } },
+            fields: ['id', 'curso', 'es_gratis'] as any,
+            limit: 1,
+        }));
+        clase = (clases as any[])[0] || null;
+        claseByFileIdCache.set(fileId, clase);
+    }
 
     if (!clase) {
         return new NextResponse('Video no encontrado', { status: 404 });
@@ -36,17 +59,25 @@ export async function GET(
         return new NextResponse('No autorizado', { status: 401 });
     }
 
-    let userId: string;
-    try {
-        const userClient = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(sessionToken));
-        const user = await userClient.request(readMe());
-        userId = user.id as string;
-    } catch (e) {
-        return new NextResponse('No autorizado', { status: 401 });
+    let userId = userIdBySessionCache.get(sessionToken);
+    if (!userId) {
+        try {
+            const userClient = createDirectus(DIRECTUS_URL).with(rest()).with(staticToken(sessionToken));
+            const user = await userClient.request(readMe());
+            userId = user.id as string;
+            userIdBySessionCache.set(sessionToken, userId);
+        } catch (e) {
+            return new NextResponse('No autorizado', { status: 401 });
+        }
     }
 
     if (!clase.es_gratis) {
-        const access = await getApprovedCourseAccess(userId, clase.curso);
+        const accessCacheKey = `${userId}:${clase.curso}`;
+        let access = accessCache.get(accessCacheKey);
+        if (access === undefined) {
+            access = !!(await getApprovedCourseAccess(userId, clase.curso));
+            accessCache.set(accessCacheKey, access);
+        }
         if (!access) {
             return new NextResponse('Acceso denegado', { status: 403 });
         }

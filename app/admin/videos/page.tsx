@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export interface CursoConClases {
     id: string;
     titulo: string;
-    clases: { id: string; titulo: string; Video: string | null }[];
+    clases: { id: string; titulo: string; Video: string | null; video_url: string | null }[];
 }
 
 export default async function AdminVideosPage() {
@@ -35,7 +35,7 @@ export default async function AdminVideosPage() {
 
     const todasLasClases = await adminClient.request(
         readItems('clases', {
-            fields: ['id', 'titulo', 'Video', 'curso'] as any,
+            fields: ['id', 'titulo', 'Video', 'video_url', 'curso'] as any,
             sort: ['orden'],
             limit: -1,
         })
@@ -49,7 +49,7 @@ export default async function AdminVideosPage() {
         titulo: c.titulo,
         clases: (todasLasClases as any[])
             .filter(cl => cl.curso === c.id)
-            .map(cl => ({ id: cl.id, titulo: cl.titulo, Video: cl.Video })),
+            .map(cl => ({ id: cl.id, titulo: cl.titulo, Video: cl.Video, video_url: cl.video_url })),
     }));
 
     return (
@@ -58,9 +58,9 @@ export default async function AdminVideosPage() {
             <main className="min-h-screen bg-background-light dark:bg-background-dark py-12">
                 <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mb-10">
-                        <h1 className="text-4xl font-black display-font mb-1">Subir Video</h1>
+                        <h1 className="text-4xl font-black display-font mb-1">Video de la Clase</h1>
                         <p className="text-gray-500 dark:text-gray-400">
-                            Subí el video de una clase directo a R2. No hace falta tocar Directus.
+                            Subí el archivo directo a R2, o vinculá un video ya publicado en YouTube. No hace falta tocar Directus.
                         </p>
                     </div>
 

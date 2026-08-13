@@ -41,8 +41,8 @@ export interface Clase {
     slug: string;
     descripcion: string;
     contenido: string;
-    Video: string; // Nombre exacto en Directus
-    video_url?: string;
+    Video?: string; // Nombre exacto en Directus. Solo presente cuando el usuario tiene acceso (ver getClaseVideoFields).
+    video_url?: string; // Idem: solo presente cuando el usuario tiene acceso.
     duracion: number;
     orden: number;
     es_gratis: boolean;
@@ -118,11 +118,15 @@ export async function getCourseBySlug(slug: string): Promise<Course | null> {
 
         const course = result[0] as unknown as Course;
 
-        // Fetch Clases
+        // Fetch Clases. IMPORTANTE: no se piden acá los campos "video_url" ni "Video" —
+        // esta lista se usa para el listado/temario del curso, visible sin verificar
+        // acceso todavía. Los campos de video se buscan aparte, por clase, únicamente
+        // después de confirmar que el usuario tiene acceso (ver getClaseVideoFields),
+        // para que la URL del video no viaje al cliente si no le corresponde.
         try {
             const { adminClient } = await import('./directus');
             const clasesResult = await adminClient.request(readItems('clases', {
-                fields: ['*'] as any,
+                fields: ['id', 'curso', 'titulo', 'slug', 'descripcion', 'contenido', 'duracion', 'orden', 'es_gratis', 'fecha_publicacion'] as any,
                 filter: { curso: { _eq: course.id } },
                 sort: ['orden']
             }));
@@ -179,6 +183,25 @@ export async function getApprovedCourseAccess(userId: string, courseId: string) 
         return (result as any[])[0] || null;
     } catch (error) {
         console.error('Error checking approved course access:', error);
+        return null;
+    }
+}
+
+// Trae el video_url de una clase puntual. Llamar SOLO después de confirmar que
+// el usuario tiene acceso a esa clase (canAccess) — así la URL de YouTube nunca
+// se pide, ni viaja al cliente, para alguien sin acceso. La reproducción es
+// únicamente por YouTube: el campo "Video" (archivo en R2) no se lee acá.
+export async function getClaseVideoFields(claseId: string): Promise<{ video_url: string | null } | null> {
+    try {
+        const result = await adminClient.request(readItems('clases', {
+            filter: { id: { _eq: claseId } },
+            fields: ['video_url'] as any,
+            limit: 1
+        }));
+
+        return (result as any[])[0] || null;
+    } catch (error) {
+        console.error('Error fetching clase video fields:', error);
         return null;
     }
 }
